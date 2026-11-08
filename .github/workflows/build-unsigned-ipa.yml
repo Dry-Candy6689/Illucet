@@ -42,6 +42,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Test release publication
+        run: python3 Scripts/tests/test_publish_release.py
+
       - name: Check release tag version
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
@@ -160,10 +163,16 @@ jobs:
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build-unsigned-ipa
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
           name: Illucet-unsigned-ipa-${{ github.sha }}
@@ -174,10 +183,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cd release
-          shasum -a 256 -c SHA256SUMS.txt
-          gh release create "$GITHUB_REF_NAME" \
+          python3 Scripts/publish-release.py \
             --repo "$GITHUB_REPOSITORY" \
-            --title "Illucet ${GITHUB_REF_NAME#v}" \
-            --notes "On-device downloads for iPhone and iPad (iOS 26+). The IPA is unsigned; use your own sideloading/signing setup. Source code, native source inputs, license notices and checksums accompany this release." \
-            Illucet.ipa SHA256SUMS.txt ThirdPartyNotices.txt Illucet-native-sources.tar.gz
+            --tag "$GITHUB_REF_NAME" \
+            --expected-sha "$GITHUB_SHA" \
+            --artifacts release

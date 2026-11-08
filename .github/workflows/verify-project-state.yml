@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - '.github/ISSUE_TEMPLATE/**'
       - 'AGENTS.md'
       - 'README.md'
       - 'LICENSE'
@@ -25,6 +26,7 @@ on:
       - '.github/workflows/verify-project-state.yml'
   pull_request:
     paths:
+      - '.github/ISSUE_TEMPLATE/**'
       - 'AGENTS.md'
       - 'README.md'
       - 'LICENSE'
@@ -56,6 +58,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Test release publication
+        run: python3 Scripts/tests/test_publish_release.py
       - name: Run verifier unit tests
         run: python3 Scripts/tests/test_verify_project_state.py
       - name: Run Python bundle verifier unit tests

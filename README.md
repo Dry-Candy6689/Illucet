@@ -1,6 +1,11 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="Design/Brand/Illucet-Dark.png">
+  <img src="Design/Brand/Illucet-Light.png" alt="Illucet app icon" width="96" height="96">
+</picture>
+
 # Illucet
 
-An on-device media downloader for iPhone and iPad, with an optional chinchilla guide named PiP.
+An on-device media downloader for iPhone and iPad.
 
 Paste a YouTube link, choose a preset, and save to Illucet, Files or Photos.
 
@@ -8,9 +13,13 @@ Paste a YouTube link, choose a preset, and save to Illucet, Files or Photos.
 - Trimming, chapters, conversion and SponsorBlock
 - Download queues, history and background transfers
 - Share Sheet Shortcuts, custom presets, themes and app icons
+- Optional onboarding and hints from PiP, the chinchilla guide
 
 Downloads and processing run on your device using yt-dlp, QuickJS and FFmpeg.
 No Illucet account or server is required. Background completion depends on iOS execution limits.
+On iOS 26, Shortcut preparation has a shorter time limit and may require reopening Illucet
+to continue a saved link; iOS 27 can request more execution time.
+See [background behavior](docs/BackgroundBehavior.md#shortcut-startup).
 
 ## Build
 

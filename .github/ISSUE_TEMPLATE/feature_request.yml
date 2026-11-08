@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest an improvement to Illucet.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Keep private information out of examples and screenshots.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to improve?
+      description: Describe the problem or use case.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: Explain how you would like it to work.
+    validations:
+      required: true

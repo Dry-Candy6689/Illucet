@@ -1,0 +1,41 @@
+name: Bug report
+description: Report something that is not working as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep account details, cookies, signed media URLs and device identifiers out of reports and screenshots.
+        Report security vulnerabilities [privately](https://github.com/Dry-Candy6689/Illucet/security/advisories/new).
+  - type: input
+    id: app-version
+    attributes:
+      label: Illucet version
+      description: Find this in Settings → About.
+    validations:
+      required: true
+  - type: input
+    id: ios-version
+    attributes:
+      label: iOS or iPadOS version
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Describe the steps, including whether Illucet was open or in the background.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Additional details (optional)
+      description: Add a redacted error message or screenshot if helpful.

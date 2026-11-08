@@ -275,3 +275,18 @@ currently verified runtimes with the names expected by CI and emits a SHA-256 fi
 The signed, team-independent Shortcut is bundled as an app resource; no external installation link
 is needed. Sign its editable plist with `shortcuts sign` after converting to a
 binary `.shortcut` file; signing requires the normal Shortcuts system service.
+
+## Release publication
+
+Version tags must match the app version. The unsigned-IPA workflow builds and tests
+before staging the four release assets in a draft. It publishes only after verifying
+all uploaded files. Publication is serialized per tag. A retry verifies an existing
+published release against its own checksum manifest without replacing its files;
+separate builds of the same source may have different archive hashes.
+An interrupted draft resumes only if its existing files match the supplied artifacts.
+Conflicts or incomplete published releases stop for review.
+
+For a read-only check, use `python3 Scripts/publish-release.py --repo OWNER/REPO
+--tag vVERSION --expected-sha COMMIT --verify-existing`, with the full commit SHA
+that the release tag should reference. The helper never edits a release in this mode.
+Run `python3 Scripts/tests/test_publish_release.py` for offline publication tests.
