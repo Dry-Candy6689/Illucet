@@ -280,7 +280,8 @@ binary `.shortcut` file; signing requires the normal Shortcuts system service.
 
 Version tags must match the app version. The unsigned-IPA workflow builds and tests
 before staging the four release assets in a draft. It publishes only after verifying
-all uploaded files. Publication is serialized per tag. A retry verifies an existing
+all uploaded files. Publication is serialized per tag. Each build attempt has its own artifact; the
+publish job uses the exact artifact ID from its successful build job. A retry verifies an existing
 published release against its own checksum manifest without replacing its files;
 separate builds of the same source may have different archive hashes.
 An interrupted draft resumes only if its existing files match the supplied artifacts.
