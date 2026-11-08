@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>LiveTestsEnabled</key>
+    <false/>
+    <key>StandardVideoURL</key>
+    <!-- Public Creative Commons Attribution test source: Big Buck Bunny,
+         Blender Foundation. Approved for Illucet live downloader validation. -->
+    <string>https://www.youtube.com/watch?v=YE7VzlLtp-4</string>
+    <key>ShortenedVideoURL</key>
+    <string></string>
+    <key>ShortsVideoURL</key>
+    <string></string>
+    <key>PlaylistURL</key>
+    <string></string>
+</dict>
+</plist>

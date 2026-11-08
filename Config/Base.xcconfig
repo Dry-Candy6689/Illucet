@@ -1,0 +1,16 @@
+ILLUCET_APP_NAME = Illucet
+ILLUCET_BUNDLE_ID = com.local.illucet
+
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+CLANG_ENABLE_MODULES = YES
+CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO
+ENABLE_USER_SCRIPT_SANDBOXING = NO
+
+// Keep source locations reproducible in diagnostics and release binaries.
+OTHER_CFLAGS = $(inherited) "-ffile-prefix-map=$(SRCROOT)=/Illucet"
+OTHER_SWIFT_FLAGS = $(inherited) -file-prefix-map "$(SRCROOT)=/Illucet" -debug-prefix-map "$(SRCROOT)=/Illucet"
+
+// Keep local signing when regenerating the Xcode project.
+#include? "DeveloperSigning.xcconfig"

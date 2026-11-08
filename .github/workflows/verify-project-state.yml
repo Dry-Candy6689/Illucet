@@ -1,0 +1,71 @@
+name: Verify documentation and Python expectations
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'docs/**'
+      - 'Config/**'
+      - 'Core/**'
+      - 'Native/**'
+      - 'PythonApp/**'
+      - 'Scripts/**'
+      - 'IllucetApp/**'
+      - 'IllucetTests/**'
+      - 'IllucetUITests/**'
+      - 'Shortcuts/**'
+      - 'LiveActivityExtension/**'
+      - 'Shared/**'
+      - 'project.yml'
+      - '.github/workflows/verify-project-state.yml'
+  pull_request:
+    paths:
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'docs/**'
+      - 'Config/**'
+      - 'Core/**'
+      - 'Native/**'
+      - 'PythonApp/**'
+      - 'Scripts/**'
+      - 'IllucetApp/**'
+      - 'IllucetTests/**'
+      - 'IllucetUITests/**'
+      - 'Shortcuts/**'
+      - 'LiveActivityExtension/**'
+      - 'Shared/**'
+      - 'project.yml'
+      - '.github/workflows/verify-project-state.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run verifier unit tests
+        run: python3 Scripts/tests/test_verify_project_state.py
+      - name: Run Python bundle verifier unit tests
+        run: python3 Scripts/tests/test_verify_python_package_bundle.py
+      - name: Verify entry documents and local links
+        run: python3 Scripts/verify-project-state.py
+      - name: Verify public source checks
+        run: |
+          python3 Scripts/tests/test_verify_public_package.py
+          python3 Scripts/tests/test_restore_runtime_dependencies.py
+          python3 Scripts/verify-public-package.py --source
+      - name: Check generated dependency expectations
+        run: python3 Scripts/sync-dependency-versions.py --check

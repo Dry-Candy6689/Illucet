@@ -1,0 +1,59 @@
+[
+  {
+    "archive": "bzip2-1.0.8.tar.gz",
+    "url": "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz",
+    "sha256": "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269"
+  },
+  {
+    "archive": "libffi-3.4.7.tar.gz",
+    "url": "https://github.com/libffi/libffi/releases/download/v3.4.7/libffi-3.4.7.tar.gz",
+    "sha256": "138607dee268bdecf374adf9144c00e839e38541f75f24a1fcf18b78fda48b2d"
+  },
+  {
+    "archive": "openssl-3.5.9.tar.gz",
+    "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz",
+    "sha256": "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a"
+  },
+  {
+    "archive": "xz-5.6.4.tar.gz",
+    "url": "https://github.com/tukaani-project/xz/releases/download/v5.6.4/xz-5.6.4.tar.gz",
+    "sha256": "269e3f2e512cbd3314849982014dc199a7b2148cf5c91cedc6db629acdf5e09b"
+  },
+  {
+    "archive": "mpdecimal-4.0.0.tar.gz",
+    "url": "https://www.bytereef.org/software/mpdecimal/releases/mpdecimal-4.0.0.tar.gz",
+    "sha256": "942445c3245b22730fd41a67a7c5c231d11cb1b9936b9c0f76334fb7d0b4468c"
+  },
+  {
+    "archive": "zstd-1.5.7.tar.gz",
+    "url": "https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz",
+    "sha256": "eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3"
+  },
+  {
+    "archive": "cpython-apple-source-deps-6b13dd9634b92fbf3999354648421966777f9b67.tar.gz",
+    "url": "https://codeload.github.com/beeware/cpython-apple-source-deps/tar.gz/6b13dd9634b92fbf3999354648421966777f9b67",
+    "sha256": "e4a50fe37e8809339ef18cf1b8cb10048933f2a3bbeb2a1b030b279fbceb7e04",
+    "build_tags": [
+      "OpenSSL-3.5.9-1"
+    ]
+  },
+  {
+    "archive": "cpython-apple-source-deps-4db03a8cc0178c6dee221635c1e06e61437d7dcb.tar.gz",
+    "url": "https://codeload.github.com/beeware/cpython-apple-source-deps/tar.gz/4db03a8cc0178c6dee221635c1e06e61437d7dcb",
+    "sha256": "597a0c733a5f203f3a4d2cdd169cad9642d05f9719e6bee035b661dd583a6451",
+    "build_tags": [
+      "XZ-5.6.4-2",
+      "BZip2-1.0.8-2",
+      "libFFI-3.4.7-2",
+      "mpdecimal-4.0.0-2"
+    ]
+  },
+  {
+    "archive": "cpython-apple-source-deps-3c376b0239c182887569c3023dc9d0429324522c.tar.gz",
+    "url": "https://codeload.github.com/beeware/cpython-apple-source-deps/tar.gz/3c376b0239c182887569c3023dc9d0429324522c",
+    "sha256": "c8f0466d2ccff71ce6c01f3757a7b8371150e08041c1cf7fd2813af76d3b0169",
+    "build_tags": [
+      "zstd-1.5.7-1"
+    ]
+  }
+]

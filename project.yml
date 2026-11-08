@@ -1,0 +1,176 @@
+name: IllucetApp
+
+options:
+  bundleIdPrefix: com.local
+  deploymentTarget:
+    iOS: "26.0"
+  xcodeVersion: "27.0"
+  createIntermediateGroups: true
+
+configs:
+  Debug: debug
+  Release: release
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+settings:
+  base:
+    TARGETED_DEVICE_FAMILY: "1,2"
+    SUPPORTS_MACCATALYST: NO
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_CFBundleDisplayName: "$(ILLUCET_APP_NAME)"
+    INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+    INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "Save compatible completed videos to Photos when you choose that destination."
+    INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Show and save the completed video you explicitly selected."
+    INFOPLIST_KEY_UIBackgroundModes: "fetch processing"
+    INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+    CURRENT_PROJECT_VERSION: 8
+    MARKETING_VERSION: 1.0.5
+
+targets:
+  Illucet:
+    type: application
+    platform: iOS
+    sources:
+      - path: IllucetApp
+      - path: Shortcuts/Download with Illucet.shortcut
+        buildPhase: resources
+      - path: docs/ThirdPartyNotices.txt
+        buildPhase: resources
+      - path: LICENSE
+        buildPhase: resources
+      - path: Core
+      - path: Shared
+      - path: Native/PythonBridge
+      - path: Native/NetworkBridge
+      - path: Native/JavaScriptBridge
+        excludes:
+          - QuickJS.modulemap
+      - path: Native/FFmpegBridge
+      - path: Native/CryptoBridge
+      - path: Native/Accounts
+    settings:
+      base:
+        PRODUCT_NAME: "$(ILLUCET_APP_NAME)"
+        PRODUCT_BUNDLE_IDENTIFIER: "$(ILLUCET_BUNDLE_ID)"
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Config/Illucet-Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: "AppIconOrange AppIconPurple AppIconPink"
+        SWIFT_OBJC_BRIDGING_HEADER: Native/IllucetBridgingHeader.h
+        PRODUCT_MODULE_NAME: Illucet
+        CODE_SIGN_ENTITLEMENTS: Config/Illucet-Shared.entitlements
+        OTHER_LDFLAGS: "$(inherited) -lm -lpthread"
+    dependencies:
+      - framework: Vendor/Frameworks/Python.xcframework
+        embed: true
+      - framework: Vendor/Frameworks/QuickJS.xcframework
+        embed: false
+      - framework: Vendor/Frameworks/IllucetMedia.xcframework
+        embed: false
+      - sdk: AudioToolbox.framework
+      - sdk: VideoToolbox.framework
+      - sdk: CoreFoundation.framework
+      - sdk: CoreMedia.framework
+      - sdk: CoreVideo.framework
+      - target: LiveActivityExtension
+        embed: true
+    postBuildScripts:
+      - name: Install embedded Python standard library and packages
+        basedOnDependencyAnalysis: false
+        script: |
+          set -euo pipefail
+          export COPYFILE_DISABLE=1
+          export EXPANDED_CODE_SIGN_IDENTITY_NAME="${EXPANDED_CODE_SIGN_IDENTITY_NAME:-Ad Hoc}"
+          export EXPANDED_CODE_SIGN_IDENTITY="${EXPANDED_CODE_SIGN_IDENTITY:--}"
+          /usr/bin/python3 "$PROJECT_DIR/Scripts/verify-python-package-bundle.py" \
+            --config "$PROJECT_DIR/Config/Dependencies.sh" \
+            "$PROJECT_DIR/Vendor/PythonPackages"
+          rsync -a --delete --delete-excluded \
+            --exclude 'tests/' \
+            --exclude '__pycache__/' \
+            --exclude '*.pyc' \
+            "$PROJECT_DIR/PythonApp/" \
+            "$CODESIGNING_FOLDER_PATH/PythonApp/"
+          rsync -a --delete --delete-excluded \
+            --exclude '__pycache__/' \
+            --exclude '*.pyc' \
+            "$PROJECT_DIR/Vendor/PythonPackages/" \
+            "$CODESIGNING_FOLDER_PATH/PythonPackages/"
+          /usr/bin/python3 "$PROJECT_DIR/Scripts/verify-python-package-bundle.py" \
+            --config "$PROJECT_DIR/Config/Dependencies.sh" \
+            "$CODESIGNING_FOLDER_PATH/PythonPackages"
+          source "$PROJECT_DIR/Vendor/Frameworks/Python.xcframework/build/utils.sh"
+          install_python Vendor/Frameworks/Python.xcframework PythonApp PythonPackages
+          /usr/bin/xattr -cr "$CODESIGNING_FOLDER_PATH"
+        showEnvVars: false
+
+  LiveActivityExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LiveActivityExtension
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_NAME: IllucetLiveActivity
+        PRODUCT_BUNDLE_IDENTIFIER: "$(ILLUCET_BUNDLE_ID).activity"
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Config/LiveActivity-Info.plist
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  IllucetTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: IllucetTests
+    dependencies:
+      - target: Illucet
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        PRODUCT_MODULE_NAME: IllucetTests
+        PRODUCT_BUNDLE_IDENTIFIER: "$(ILLUCET_BUNDLE_ID).tests"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/$(ILLUCET_APP_NAME).app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/$(ILLUCET_APP_NAME)"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    postBuildScripts:
+      - name: Remove signing-incompatible file-provider attributes
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          /usr/bin/xattr -cr "$CODESIGNING_FOLDER_PATH"
+        showEnvVars: false
+
+  IllucetUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: IllucetUITests
+    dependencies:
+      - target: Illucet
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        PRODUCT_MODULE_NAME: IllucetUITests
+        PRODUCT_BUNDLE_IDENTIFIER: "$(ILLUCET_BUNDLE_ID).uitests"
+        TEST_TARGET_NAME: Illucet
+
+schemes:
+  Illucet:
+    build:
+      targets:
+        Illucet: all
+        IllucetTests: [test]
+        IllucetUITests: [test]
+    test:
+      targets:
+        - IllucetTests
+        - IllucetUITests
+      gatherCoverageData: true

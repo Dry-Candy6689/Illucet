@@ -1,0 +1,10 @@
+--- a/build/utils.sh
++++ b/build/utils.sh
+@@ -108,6 +108,7 @@
+         mv "$MODULE_PATH/$MODULE_NAME.xcprivacy" "$XCPRIVACY_FILE"
+     fi
+
++    /usr/bin/xattr -cr "$CODESIGNING_FOLDER_PATH/$FRAMEWORK_FOLDER"
+     echo "Signing framework as $EXPANDED_CODE_SIGN_IDENTITY_NAME ($EXPANDED_CODE_SIGN_IDENTITY)..."
+     /usr/bin/codesign --force --sign "$EXPANDED_CODE_SIGN_IDENTITY" ${OTHER_CODE_SIGN_FLAGS:-} -o runtime --timestamp=none --preserve-metadata=identifier,entitlements,flags --generate-entitlement-der "$CODESIGNING_FOLDER_PATH/$FRAMEWORK_FOLDER"
+ }

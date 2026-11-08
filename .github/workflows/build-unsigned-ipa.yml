@@ -1,0 +1,183 @@
+name: Build unsigned Illucet IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - '.github/workflows/build-unsigned-ipa.yml'
+      - 'project.yml'
+      - 'IllucetApp.xcodeproj/**'
+      - 'Config/**'
+      - 'Core/**'
+      - 'Native/**'
+      - 'Patches/**'
+      - 'PythonApp/**'
+      - 'Scripts/**'
+      - 'Shortcuts/**'
+      - 'LiveActivityExtension/**'
+      - 'Shared/**'
+      - 'IllucetApp/**'
+      - 'IllucetTests/**'
+      - 'IllucetUITests/**'
+      - 'docs/Signing.md'
+      - 'docs/KnownLimitations.md'
+
+permissions:
+  contents: read
+
+jobs:
+  build-unsigned-ipa:
+    runs-on: xcode-27
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check release tag version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re
+          version = re.search(r'MARKETING_VERSION: ([0-9.]+)', pathlib.Path('project.yml').read_text())[1]
+          assert os.environ['GITHUB_REF_NAME'] == 'v' + version, 'Release tag must match the app version'
+          PY
+
+      - name: Restore verified runtime dependencies
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: Scripts/restore-runtime-dependencies.sh
+
+      - name: Refresh verified pure-Python packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          Scripts/fetch-stage0-dependencies.sh --python-packages-only
+
+      - name: Verify Xcode 27 toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          xcodebuild -version
+          XCODE_VERSION="$(xcodebuild -version | awk '/^Xcode / { print $2 }')"
+          XCODE_MAJOR="${XCODE_VERSION%%.*}"
+          test "$XCODE_MAJOR" = "27"
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Build unsigned handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x Scripts/*.sh
+          ILLUCET_BUILD_STAMP=github-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT} \
+            Scripts/build-unsigned-handoff.sh "$RUNNER_TEMP/IllucetUnsigned"
+
+      - name: Verify IPA payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$RUNNER_TEMP/IllucetUnsigned/Illucet.ipa"
+          unzip -t "$RUNNER_TEMP/IllucetUnsigned/Illucet.ipa"
+          unzip -l "$RUNNER_TEMP/IllucetUnsigned/Illucet.ipa" | grep 'Payload/Illucet.app/Illucet'
+          PAYLOAD_DIRECTORY="$RUNNER_TEMP/IllucetUnsigned/PayloadProof"
+          mkdir -p "$PAYLOAD_DIRECTORY"
+          unzip -q "$RUNNER_TEMP/IllucetUnsigned/Illucet.ipa" -d "$PAYLOAD_DIRECTORY"
+          source Config/Dependencies.sh
+          python3 - \
+            "$PAYLOAD_DIRECTORY/Payload/Illucet.app/PythonPackages" \
+            "$YTDLP_VERSION" \
+            "$YTDLP_EJS_VERSION" \
+            "$CERTIFI_VERSION" <<'PY'
+          import pathlib
+          import sys
+          from importlib import metadata
+
+          package_root, expected_ytdlp, expected_ejs, expected_certifi = sys.argv[1:]
+          sys.path.insert(0, str(pathlib.Path(package_root)))
+          import certifi
+          import yt_dlp
+
+          assert yt_dlp.version.__version__ == expected_ytdlp
+          assert metadata.version("yt-dlp-ejs") == expected_ejs
+          assert metadata.version("certifi") == expected_certifi
+          print("IPA yt-dlp", yt_dlp.version.__version__)
+          print("IPA yt-dlp-ejs", metadata.version("yt-dlp-ejs"))
+          print("IPA certifi", metadata.version("certifi"))
+          PY
+
+      - name: Run deterministic simulator regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          ILLUCET_SIMULATOR_ID="$(xcrun simctl list devices available --json | python3 -c '
+          import json, re, sys
+          devices = json.load(sys.stdin)["devices"]
+          candidates = []
+          for runtime, entries in devices.items():
+              if not runtime.startswith("com.apple.CoreSimulator.SimRuntime.iOS-"):
+                  continue
+              version = tuple(int(part) for part in re.findall(r"\d+", runtime))
+              for device in entries:
+                  if device.get("isAvailable"):
+                      candidates.append((version, device.get("name", ""), device["udid"]))
+          if not candidates:
+              raise SystemExit("No available iOS simulator runtime was found")
+          print(max(candidates)[2])
+          ')"
+          export ILLUCET_SIMULATOR_ID
+          Scripts/verify.sh simulator
+
+      - name: Package corresponding native sources
+        run: |
+          python3 Scripts/package-native-sources.py "$RUNNER_TEMP/IllucetUnsigned/Illucet-native-sources.tar.gz"
+          cd "$RUNNER_TEMP/IllucetUnsigned"
+          shasum -a 256 Illucet.ipa ThirdPartyNotices.txt Illucet-native-sources.tar.gz > SHA256SUMS.txt
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Illucet-unsigned-ipa-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/IllucetUnsigned/Illucet.ipa
+            ${{ runner.temp }}/IllucetUnsigned/SHA256SUMS.txt
+            ${{ runner.temp }}/IllucetUnsigned/ThirdPartyNotices.txt
+            ${{ runner.temp }}/IllucetUnsigned/Illucet-native-sources.tar.gz
+            ${{ runner.temp }}/IllucetUnsigned/Signing.md
+            ${{ runner.temp }}/IllucetUnsigned/KnownLimitations.md
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-unsigned-ipa
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Illucet-unsigned-ipa-${{ github.sha }}
+          path: release
+      - name: Publish verified unsigned IPA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release
+          shasum -a 256 -c SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Illucet ${GITHUB_REF_NAME#v}" \
+            --notes "On-device downloads for iPhone and iPad (iOS 26+). The IPA is unsigned; use your own sideloading/signing setup. Source code, native source inputs, license notices and checksums accompany this release." \
+            Illucet.ipa SHA256SUMS.txt ThirdPartyNotices.txt Illucet-native-sources.tar.gz

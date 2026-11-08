@@ -1,0 +1,51 @@
+{
+  "PythonPackages/yt_dlp/extractor/cybrary.py": {
+    "sha256": "a12957ab0d90ce1bb75b2eeeb73127f86ade083e61eca27f283718cac31399aa",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public upstream service credentials or sample names; exact file verified against the pinned official yt-dlp wheel."
+  },
+  "PythonPackages/yt_dlp/extractor/googledrive.py": {
+    "sha256": "79891e046443ca05c02fe73516e7a3e658584f372d54a96dfad6ec0c908e91c5",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public upstream service credentials or sample names; exact file verified against the pinned official yt-dlp wheel."
+  },
+  "PythonPackages/yt_dlp/extractor/shahid.py": {
+    "sha256": "f82c1f065f6aa3dd5ce8ee3491d4c49f245d1e7ba921b8cc0cc9c8658a634fbd",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public upstream service credentials or sample names; exact file verified against the pinned official yt-dlp wheel."
+  },
+  "PythonPackages/yt_dlp/extractor/stacommu.py": {
+    "sha256": "e8defd529946c9dc13804cec33b42e58f52feaf8b33c9cf2f0662fddf2706a5b",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public upstream service credentials or sample names; exact file verified against the pinned official yt-dlp wheel."
+  },
+  "PythonPackages/yt_dlp/extractor/wrestleuniverse.py": {
+    "sha256": "1b1377fa93c211f4a9a32871a0047827ca6fb787e20fd63f06043e72a1e26f8c",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public upstream service credentials or sample names; exact file verified against the pinned official yt-dlp wheel."
+  },
+  "PythonPackages/yt_dlp/extractor/bbc.py": {
+    "sha256": "6ed05679f5ff4385e14e0fbbeba928dd6093307b11313ed90c4dcdbf8204c9cf",
+    "rules": [
+      "local denylist match"
+    ],
+    "reason": "Public upstream service credentials or sample names; exact file verified against the pinned official yt-dlp wheel."
+  },
+  "PythonPackages/yt_dlp/extractor/goodgame.py": {
+    "sha256": "34cfe02b86d778bfaf98401488d5e79634c5b9b73bdfa9d6472a38a6f89e5a24",
+    "rules": [
+      "local denylist match"
+    ],
+    "reason": "Public upstream service credentials or sample names; exact file verified against the pinned official yt-dlp wheel."
+  }
+}
