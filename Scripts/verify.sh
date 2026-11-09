@@ -11,6 +11,7 @@ static() {
     need_file "$ROOT/Config/Dependencies.sh"
     need_file "$ROOT/Vendor/PythonPackages/yt_dlp/version.py"
     python3 "$ROOT/Scripts/tests/test_publish_release.py"
+    python3 "$ROOT/Scripts/tests/test_package_native_sources.py"
     python3 "$ROOT/Scripts/tests/test_verify_project_state.py"
     python3 "$ROOT/Scripts/tests/test_verify_branding.py"
     python3 "$ROOT/Scripts/tests/test_verify_public_package.py"

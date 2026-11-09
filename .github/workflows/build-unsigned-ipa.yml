@@ -45,7 +45,9 @@ jobs:
           persist-credentials: false
 
       - name: Test release publication
-        run: python3 Scripts/tests/test_publish_release.py
+        run: |
+          python3 Scripts/tests/test_publish_release.py
+          python3 Scripts/tests/test_package_native_sources.py
 
       - name: Check release tag version
         if: startsWith(github.ref, 'refs/tags/v')

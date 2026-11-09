@@ -5,12 +5,52 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import http.client
+import ssl
+import tempfile
+import time
+import urllib.error
 import re
 import subprocess
 import sys
 import tarfile
 import urllib.request
 from pathlib import Path
+
+
+def download_source(url: str, path: Path, expected_sha: str) -> None:
+    """Retry transient transport failures; cache only a complete verified archive."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    for attempt in range(3):
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(dir=path.parent, suffix=".part", delete=False) as stream:
+                temporary = Path(stream.name)
+                checksum = hashlib.sha256()
+                with urllib.request.urlopen(url, timeout=60) as response:
+                    while chunk := response.read(1024 * 1024):
+                        stream.write(chunk)
+                        checksum.update(chunk)
+            if checksum.hexdigest() != expected_sha:
+                raise ValueError("native source input failed SHA-256 verification")
+            temporary.replace(path)
+            return
+        except (urllib.error.URLError, ConnectionError, TimeoutError, http.client.IncompleteRead) as error:
+            if isinstance(error, urllib.error.HTTPError):
+                retryable = error.code in (408, 429, 500, 502, 503, 504)
+                error.close()
+            else:
+                reason = getattr(error, "reason", error)
+                retryable = isinstance(reason, (ConnectionError, TimeoutError, http.client.IncompleteRead))
+                if isinstance(reason, ssl.SSLCertVerificationError):
+                    retryable = False
+            if not retryable or attempt == 2:
+                raise
+            print(f"Retrying source download: {path.name} (attempt {attempt + 2}/3)", flush=True)
+            time.sleep(2 ** attempt)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
 
 def package(root: Path, output: Path) -> None:
@@ -22,9 +62,7 @@ def package(root: Path, output: Path) -> None:
     for entry in entries:
         path = root / "Vendor/Downloads" / entry["archive"]
         if not path.is_file():
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with urllib.request.urlopen(entry["url"], timeout=60) as response:
-                path.write_bytes(response.read())
+            download_source(entry["url"], path, entry["sha256"])
         with path.open("rb") as stream:
             actual = hashlib.file_digest(stream, "sha256").hexdigest()
         if actual != entry["sha256"]:

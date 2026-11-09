@@ -59,7 +59,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Test release publication
-        run: python3 Scripts/tests/test_publish_release.py
+        run: |
+          python3 Scripts/tests/test_publish_release.py
+          python3 Scripts/tests/test_package_native_sources.py
       - name: Run verifier unit tests
         run: python3 Scripts/tests/test_verify_project_state.py
       - name: Run Python bundle verifier unit tests
