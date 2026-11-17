@@ -85,7 +85,22 @@ class GitHub:
         raise ReleaseError('Tag does not resolve to a commit')
 
     def release(self, tag: str):
-        return self.api(f'releases/tags/{tag}', missing_ok=True)
+        published = self.api(f'releases/tags/{tag}', missing_ok=True)
+        if published is not None:
+            return published
+        # The by-tag endpoint returns published releases. Drafts are visible
+        # in the authenticated release inventory for users with push access.
+        page = 1
+        while True:
+            releases = self.api(f'releases?per_page=100&page={page}')
+            matches = [release for release in releases if release['tag_name'] == tag]
+            if len(matches) > 1:
+                raise ReleaseError('Multiple releases use the requested tag')
+            if matches:
+                return matches[0]
+            if len(releases) < 100:
+                return None
+            page += 1
 
     def download(self, asset: dict, destination: Path) -> None:
         with destination.open('wb') as stream:

@@ -219,8 +219,38 @@ class PublicationTests(unittest.TestCase):
             command.return_value = subprocess.CompletedProcess([], 1, '', message)
             with self.assertRaises(publisher.ReleaseError):
                 api.release(TAG)
-        command.return_value = subprocess.CompletedProcess([], 1, '', 'gh: Not Found (HTTP 404)')
+        command.side_effect = [
+            subprocess.CompletedProcess([], 1, '', 'gh: Not Found (HTTP 404)'),
+            subprocess.CompletedProcess([], 0, '[]', ''),
+        ]
         self.assertIsNone(api.release(TAG))
+
+    def test_published_lookup_does_not_enumerate_releases(self):
+        api = publisher.GitHub('example/Illucet')
+        published = {'tag_name': TAG, 'draft': False}
+        with patch.object(api, 'api', return_value=published) as request:
+            self.assertIs(api.release(TAG), published)
+        request.assert_called_once_with(f'releases/tags/{TAG}', missing_ok=True)
+
+    def test_draft_lookup_paginates_after_published_endpoint_returns_missing(self):
+        api = publisher.GitHub('example/Illucet')
+        draft = {'tag_name': TAG, 'draft': True, 'id': 123}
+        first_page = [{'tag_name': f'other-{i}', 'draft': False} for i in range(100)]
+        with patch.object(api, 'api', side_effect=[None, first_page, [draft]]) as request:
+            self.assertIs(api.release(TAG), draft)
+        self.assertEqual([call.args[0] for call in request.call_args_list],
+                         [f'releases/tags/{TAG}', 'releases?per_page=100&page=1',
+                          'releases?per_page=100&page=2'])
+
+    def test_draft_lookup_stops_after_partial_page_and_rejects_duplicate_tags(self):
+        api = publisher.GitHub('example/Illucet')
+        draft = {'tag_name': TAG, 'draft': True}
+        with patch.object(api, 'api', side_effect=[None, [{'tag_name': 'other'}]]) as request:
+            self.assertIsNone(api.release(TAG))
+            self.assertEqual(request.call_count, 2)
+        with patch.object(api, 'api', side_effect=[None, [draft, draft]]):
+            with self.assertRaisesRegex(publisher.ReleaseError, 'Multiple releases'):
+                api.release(TAG)
 
     @patch('subprocess.run')
     def test_annotated_tag_is_resolved(self, command):
