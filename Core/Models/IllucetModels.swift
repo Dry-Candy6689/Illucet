@@ -31,6 +31,7 @@ enum DownloadMode: String, Codable, CaseIterable, Identifiable, Sendable {
 enum EffectiveOutputIdentity: String, Codable, CaseIterable, Identifiable,
     Sendable
 {
+    case image = "Image"
     case thumbnailOnly = "Thumbnail Only"
     case subtitlesOnly = "Subtitles Only"
     case audioOnly = "Audio Only"
@@ -41,6 +42,7 @@ enum EffectiveOutputIdentity: String, Codable, CaseIterable, Identifiable,
 
     var systemImage: String {
         switch self {
+        case .image: "photo"
         case .thumbnailOnly: "photo"
         case .subtitlesOnly: "captions.bubble"
         case .audioOnly: "waveform"
@@ -55,6 +57,7 @@ enum EffectiveOutputIdentity: String, Codable, CaseIterable, Identifiable,
         .videoOnly,
         .thumbnailOnly,
         .subtitlesOnly,
+        .image,
     ]
 }
 
@@ -87,10 +90,10 @@ enum SourceModeAvailability: Equatable, Sendable {
             self = .unverified
             return
         }
-        self = .analyzed(
-            hasVideo: analyzedMetadata.formats.contains(where: \.hasVideo),
-            hasAudio: analyzedMetadata.formats.contains(where: \.hasAudio)
-        )
+        let formats = analyzedMetadata.sourceIdentity == nil ? analyzedMetadata.formats
+            : FormatSelection.formats(for: .videoAndAudio, in: analyzedMetadata)
+        self = .analyzed(hasVideo: formats.contains(where: \.hasVideo),
+                         hasAudio: formats.contains(where: \.hasAudio))
     }
 
     func status(for mode: DownloadMode) -> DownloadModeAvailability {
@@ -565,6 +568,10 @@ enum FormatSelectionProvenance: String, Codable, Sendable {
 }
 
 struct DownloadConfiguration: Codable, Equatable, Sendable {
+    var duplicateHandlingOverride: DuplicateHandling? = nil
+    var sourceIdentity: MediaSourceIdentity? = nil
+    var assetFingerprint: String? = nil
+    var enginePreferences: EnginePreferences? = nil
     var metadataSidecars: Set<MetadataSidecarKind>? = nil
     var speedLimitBytesPerSecond: Int64? = nil
     var waitForCharging: Bool? = nil
@@ -672,14 +679,17 @@ struct DownloadConfiguration: Codable, Equatable, Sendable {
         }
     }
 
-    var hasMediaTimeline: Bool { !isSubtitlesOnly && thumbnailBehavior != .thumbnailOnly }
+    var hasMediaTimeline: Bool { !isSubtitlesOnly && thumbnailBehavior != .thumbnailOnly && sourceIdentity?.kind != .image }
 
     var effectiveSponsorBlock: SponsorBlockPolicy {
         hasMediaTimeline ? sponsorBlock : .disabled
     }
 
+    static let originalImageFormatID = "original"
+
     var selectedFormatIDs: [String] {
-        [selectedVideoFormatID, selectedAudioFormatID].compactMap { $0 }
+        if sourceIdentity?.kind == .image { return [Self.originalImageFormatID] }
+        return [selectedVideoFormatID, selectedAudioFormatID].compactMap { $0 }
     }
 
     var shouldRefreshAutomaticFormatSelection: Bool {
@@ -691,6 +701,7 @@ struct DownloadConfiguration: Codable, Equatable, Sendable {
     }
 
     var effectiveOutputIdentity: EffectiveOutputIdentity {
+        if sourceIdentity?.kind == .image { return .image }
         if requestKind == .subtitlesOnly { return .subtitlesOnly }
         if thumbnailBehavior == .thumbnailOnly { return .thumbnailOnly }
         return mode.effectiveOutputIdentity
@@ -703,7 +714,7 @@ struct DownloadConfiguration: Codable, Equatable, Sendable {
     func sourceModeAvailability(
         in analyzedMetadata: MediaMetadata?
     ) -> DownloadModeAvailability {
-        if effectiveOutputIdentity == .thumbnailOnly
+        if effectiveOutputIdentity == .image || effectiveOutputIdentity == .thumbnailOnly
             || effectiveOutputIdentity == .subtitlesOnly {
             return .available
         }
@@ -830,7 +841,7 @@ struct JobProgress: Codable, Equatable, Sendable {
 }
 
 enum ForegroundResumeReason: String, Codable, Sendable {
-    case processingTime, legacyPlayback
+    case processingTime, legacyPlayback, proofToken, websiteAccess
 }
 
 struct DownloadJob: Codable, Equatable, Identifiable, Sendable {
@@ -895,8 +906,10 @@ struct DownloadJob: Codable, Equatable, Identifiable, Sendable {
         if state == .paused {
             return "Download paused"
         }
-        return stage.rawValue
+        return displayStage
     }
+
+    var displayStage: String { stage == .downloadingThumbnail && configuration.sourceIdentity?.kind == .image ? "Downloading image" : stage.rawValue }
 
     var effectiveOutputIdentity: EffectiveOutputIdentity {
         configuration.effectiveOutputIdentity
@@ -980,6 +993,8 @@ struct HistoryRecord: Codable, Equatable, Identifiable, Sendable {
         effectiveOutputIdentity == .thumbnailOnly
     }
 
+    var isImageOutput: Bool { effectiveOutputIdentity == .image || isThumbnailOnly }
+
     var isSubtitlesOnly: Bool {
         effectiveOutputIdentity == .subtitlesOnly
     }
@@ -1020,6 +1035,8 @@ struct RecentLink: Codable, Equatable, Identifiable, Sendable {
 }
 
 struct AppSettings: Codable, Equatable, Sendable {
+    var engines: EnginePreferences? = nil
+    var siteDefaults: [String: SiteDownloadDefaults]? = nil
     var pip: PipPreferences? = nil
     var downloadExperience: DownloadExperiencePreferences? = nil
     var clipboard: ClipboardPreferences? = nil
@@ -1140,8 +1157,21 @@ struct AppSettings: Codable, Equatable, Sendable {
         downloadSpeedLimitBytesPerSecond: nil
     )
 
+    func extractionPreferences(for site: MediaSite) -> EnginePreferences {
+        var value = engines ?? .init()
+        let defaults = siteDefaults?[site.rawValue]
+        value.accountAccess = defaults?.accountAccess ?? value.accountAccess ?? .automatic
+        value.poTokens = value.poTokens ?? .automatic
+        if let engine = defaults?.engine { value.download = engine }
+        return value
+    }
+
     func configuration() -> DownloadConfiguration {
         var value = DownloadConfiguration.standard
+        var preferences = engines ?? .init()
+        preferences.accountAccess = preferences.accountAccess ?? .automatic
+        preferences.poTokens = preferences.poTokens ?? .automatic
+        value.enginePreferences = preferences
         value.mode = defaultMode
         value.preset = defaultPreset
         value.maximumResolution = maximumResolution

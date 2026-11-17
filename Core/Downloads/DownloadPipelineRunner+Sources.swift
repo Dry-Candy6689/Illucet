@@ -1,13 +1,14 @@
 import Foundation
 
 enum ProductionSourceResolution: Sendable {
+    case external(SelectedSourceFact, ExternalResolvedAsset)
     case direct(SelectedSourceFact, ResolvedStream)
     case DASH(SelectedSourceFact, ResolvedDASHFragmentPlan)
     case HLS(SelectedSourceFact, ResolvedHLSPlaylistSelection)
 
     var selection: SelectedSourceFact {
         switch self {
-        case let .direct(selection, _),
+        case let .external(selection, _), let .direct(selection, _),
              let .DASH(selection, _),
              let .HLS(selection, _):
             selection
@@ -16,6 +17,7 @@ enum ProductionSourceResolution: Sendable {
 
     var expectedBytes: Int64? {
         switch self {
+        case let .external(_, asset): asset.expectedBytes
         case let .direct(_, stream): stream.expectedBytes
         case let .DASH(_, plan): plan.expectedBytes
         case .HLS: nil
@@ -117,14 +119,29 @@ extension DownloadPipelineRunner {
         sourceURL: URL,
         expectedVideoID: String,
         accountID: UUID? = nil,
-        reuseToken: String? = nil
+        reuseToken: String? = nil,
+        configuration: DownloadConfiguration? = nil
     ) async throws -> [ProductionSourceResolution] {
+        if var configuration, configuration.sourceIdentity != nil || configuration.enginePreferences?.download == .ytDLP {
+            if configuration.sourceIdentity == nil {
+                configuration.sourceIdentity = .init(site: .youtube, postID: expectedVideoID, assetID: expectedVideoID, kind: .video)
+            }
+            var result: [ProductionSourceResolution] = []
+            for selection in selections {
+                let asset = try await runtime.externalSource(url: sourceURL, configuration: configuration, formatID: selection.formatID)
+                guard asset.formatID == selection.formatID, asset.hasVideo == selection.hasVideo,
+                      asset.hasAudio == selection.hasAudio, asset.fileExtension?.lowercased() == selection.fileExtension,
+                      asset.protocolName.lowercased() == selection.protocolName else { throw StreamResolutionError.invalidResponse }
+                result.append(.external(selection, asset))
+            }
+            return result
+        }
         let directSelections = selections.filter {
             $0.transport == .directHTTP
         }
         var directByFormatID: [String: ResolvedStream] = [:]
         if !directSelections.isEmpty {
-            let resolver = try await runtime.makeResolver(accountID: accountID)
+            let resolver = try await runtime.configuredResolver(accountID: accountID, preferences: configuration?.enginePreferences)
             let resolved = try await resolver.resolve(
                 url: sourceURL,
                 formatIDs: directSelections.map(\.formatID),
@@ -153,13 +170,13 @@ extension DownloadPipelineRunner {
             $0.transport == .DASHFragments
         }
         let DASHResolver = hasDASH
-            ? try await runtime.makeDASHFragmentResolver(accountID: accountID)
+            ? try await runtime.configuredDASHResolver(accountID: accountID, preferences: configuration?.enginePreferences)
             : nil
         let hasHLS = selections.contains {
             $0.transport == .HLSResources
         }
         let HLSResolver = hasHLS
-            ? try await runtime.makeHLSPlaylistResolver(accountID: accountID)
+            ? try await runtime.configuredHLSResolver(accountID: accountID, preferences: configuration?.enginePreferences)
             : nil
         var result: [ProductionSourceResolution] = []
         result.reserveCapacity(selections.count)
@@ -242,7 +259,7 @@ extension DownloadPipelineRunner {
         try await FragmentURLRecovery.run(initial: plan, refresh: {
             guard let currentJob = await context.currentJob(jobID) else { throw CancellationError() }
             let refreshed = try await self.resolveSources([selectedSource], sourceURL: sourceURL,
-                                                          expectedVideoID: plan.videoID, accountID: currentJob.configuration.accountID)
+                                                          expectedVideoID: plan.videoID, accountID: currentJob.configuration.accountID, configuration: currentJob.configuration)
             guard case let .DASH(_, exactPlan) = refreshed.first else {
                 throw DASHFragmentResolutionError.invalidResponse
             }
@@ -270,7 +287,7 @@ extension DownloadPipelineRunner {
         try await FragmentURLRecovery.run(initial: selection, refresh: {
             guard let currentJob = await context.currentJob(jobID) else { throw CancellationError() }
             let refreshed = try await self.resolveSources([selectedSource], sourceURL: sourceURL,
-                                                          expectedVideoID: selection.videoID, accountID: currentJob.configuration.accountID)
+                                                          expectedVideoID: selection.videoID, accountID: currentJob.configuration.accountID, configuration: currentJob.configuration)
             guard case let .HLS(_, exactSelection) = refreshed.first else {
                 throw HLSPlaylistResolutionError.identityMismatch
             }
@@ -587,6 +604,8 @@ extension DownloadPipelineRunner {
         transferResult: StreamDownloadResult?
     ) -> String {
         switch source {
+        case .external:
+            "external_asset bytes=\(actualBytes), reused=\(reusedSource)"
         case let .direct(_, stream):
             StreamTransportDiagnosticFacts(stream: stream)
                 .completionDetail(

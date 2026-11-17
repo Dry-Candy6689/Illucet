@@ -7,6 +7,7 @@ EJSBaseJCP seam. Its import/contract test must pass for every yt-dlp/EJS update.
 from __future__ import annotations
 
 import contextvars
+active_engine_preferences = contextvars.ContextVar("illucet_engine_preferences", default={})
 import _illucet_native
 from yt_dlp.extractor.youtube.jsc._builtin.ejs import EJSBaseJCP
 from yt_dlp.extractor.youtube.jsc._director import (
@@ -171,6 +172,7 @@ def finish_extraction_diagnostics(
             "provider_failure_count": int(
                 current.get("provider_failure_count", 0)
             ),
+            "runtime_backend": current.get("runtime_backend", "QuickJS"),
             "ejs_core_sha3_512": current.get("ejs_core_sha3_512"),
             "ejs_library_sha3_512": current.get(
                 "ejs_library_sha3_512"
@@ -433,6 +435,12 @@ class IllucetQuickJSJCP(EJSBaseJCP, BuiltinIEContentProvider):
         _increment_diagnostic("runtime_call_count")
         _record_ejs_hashes(self)
         try:
+            solver = active_engine_preferences.get().get("javaScript", "quickJS")
+            diagnostics = _active_extraction_diagnostics.get()
+            if solver == "webKit":
+                if diagnostics is not None: diagnostics["runtime_backend"] = "WebKit"
+                return _illucet_native.webkit_evaluate(stdin, self.QUICKJS_TIMEOUT_MILLISECONDS, self.QUICKJS_OUTPUT_LIMIT)
+            if diagnostics is not None: diagnostics["runtime_backend"] = "QuickJS"
             return _illucet_native.quickjs_evaluate(
                 stdin,
                 self.QUICKJS_MEMORY_LIMIT,
@@ -447,6 +455,15 @@ class IllucetQuickJSJCP(EJSBaseJCP, BuiltinIEContentProvider):
                 "Illucet JavaScript challenge evaluation was cancelled."
             ) from None
         except TimeoutError as error:
+            if active_engine_preferences.get().get("javaScript") == "automatic":
+                try:
+                    diagnostics = _active_extraction_diagnostics.get()
+                    if diagnostics is not None: diagnostics["runtime_backend"] = "WebKit"
+                    return _illucet_native.webkit_evaluate(stdin, self.QUICKJS_TIMEOUT_MILLISECONDS, self.QUICKJS_OUTPUT_LIMIT)
+                except InterruptedError:
+                    raise IllucetProviderCancelled("WebKit challenge evaluation was cancelled.") from None
+                except (TimeoutError, RuntimeError, OverflowError):
+                    pass
             _increment_diagnostic("runtime_error_count")
             _increment_diagnostic("runtime_timeout_count")
             raise IllucetProviderFailure(

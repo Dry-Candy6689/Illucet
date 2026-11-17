@@ -52,6 +52,22 @@ final class IllucetAppModel: ObservableObject {
     @Published var isAnalyzing = false
     @Published private(set) var isStartingQuickStart = false
     @Published var analyzedMetadata: MediaMetadata?
+    @Published var presentsBulkImport = false
+    @Published var bulkImportText = ""
+    @Published var bulkLinks: [ImportedLink] = []
+    @Published var bulkAssets: [BulkMediaItem] = []
+    @Published var bulkImportStep = BulkImportStep.input
+    @Published var bulkImportBusy = false
+    @Published var bulkImportMessage: String?
+    @Published var bulkSkipArchived = true
+    @Published var bulkFailedLinks: [URL] = []
+    @Published var clipboardBulkSuggestion: String?
+    @Published var bulkBaseConfiguration = DownloadConfiguration.standard
+    var bulkImportTask: Task<Void, Never>?
+    var bulkIndividualSource = false
+    @Published var savedLinkBatches: [SharedLinkBatch] = []
+    var activeSharedBatchID: UUID?
+    var bulkSubmissionID = UUID()
     @Published var playlistDraft: PlaylistBatchDraft?
     @Published var extractionVersions: ExtractorVersions?
     @Published var configuration = DownloadConfiguration.standard
@@ -258,7 +274,11 @@ final class IllucetAppModel: ObservableObject {
         )
         self.coordinator = coordinator
         let childFactory = PlaylistChildJobFactory(
-            loadAccountMetadata: { URL, accountID in
+            loadSourceMetadata: { URL, accountID, configuration in
+                if configuration.sourceIdentity != nil {
+                    if fixtureMode, let fixture = DeveloperFixtures.externalAssets.first(where: { $0.sourceIdentity == configuration.sourceIdentity }) { return fixture }
+                    return try await runtime.externalMetadata(url: URL, configuration: configuration)
+                }
                 if fixtureMode,
                    let videoID = LiveExtractionValidator.youtubeVideoID(
                        from: URL
@@ -269,7 +289,7 @@ final class IllucetAppModel: ObservableObject {
                     try await Task.sleep(for: .milliseconds(35))
                     return DeveloperFixtures.media(for: entry)
                 }
-                let extractor = try await runtime.extractor(accountID: accountID)
+                let extractor = try await runtime.extractor(accountID: accountID, preferences: configuration.enginePreferences ?? .init())
                 return try await extractor.analyze(url: URL)
             },
             enqueue: { metadata, configuration, version, membership in
@@ -368,6 +388,10 @@ final class IllucetAppModel: ObservableObject {
         }
         lastAutomaticClipboardChange = UIPasteboard.general.changeCount
         if let value = UIPasteboard.general.string {
+            if let links = try? BulkLinkImport.links(in: value), links.filter(\.selected).count > 1 {
+                openBulkImport(text: value)
+                return
+            }
             URLText = value.trimmingCharacters(in: .whitespacesAndNewlines)
             recordPastedLink(URLText)
         }
@@ -501,8 +525,18 @@ final class IllucetAppModel: ObservableObject {
             alert = .error(IllucetError.emptyURL)
             return
         }
+        if let links = try? BulkLinkImport.links(in: value), links.filter(\.selected).count > 1 {
+            openBulkImport(text: value)
+            return
+        }
         guard let URL = Foundation.URL(string: value) else {
             alert = .error(IllucetError.invalidURL)
+            return
+        }
+        if let site = MediaSite.recognize(URL), site != .youtube {
+            resetDownloadReview()
+            analyzedMetadata = nil
+            openBulkImport(text: value, individual: true)
             return
         }
         let intent: YouTubeMediaURLIntent
@@ -526,7 +560,8 @@ final class IllucetAppModel: ObservableObject {
         playlistDraft = nil
         let accountID = pendingRedownloadConfiguration != nil
             ? pendingRedownloadConfiguration?.accountID
-            : (activeShortcutRequest?.url == URL ? quickStartPreset?.configuration.accountID : nil) ?? selectedAccountID
+            : (activeShortcutRequest?.url == URL ? quickStartPreset?.configuration.accountID : nil)
+                ?? preferredAccountID(for: .youtube)
         Task {
             defer { isAnalyzing = false; opensFullOptionsAfterAnalysis = false; analysisUsesSharedRouting = false }
             do {
@@ -559,12 +594,16 @@ final class IllucetAppModel: ObservableObject {
         URL: URL,
         quickStartPreset: QuickStartPreset?, accountID: UUID?
     ) async throws {
+        let siteDefaults = settings.siteDefaults?[MediaSite.youtube.rawValue]
+        var enginePreferences = pendingRedownloadConfiguration?.enginePreferences ?? settings.extractionPreferences(for: .youtube)
+        enginePreferences.accountAccess = enginePreferences.accountAccess ?? .automatic
+        enginePreferences.poTokens = enginePreferences.poTokens ?? .automatic
         let metadata: MediaMetadata
         if fixtureMode {
             try await Task.sleep(for: .milliseconds(180))
             metadata = DeveloperFixtures.media
         } else {
-            let extractor = try await runtime.extractor(accountID: accountID)
+            let extractor = try await runtime.extractor(accountID: accountID, preferences: enginePreferences)
             async let metadataValue = extractor.analyze(url: URL)
             async let versionsValue = extractor.versions()
             metadata = try await metadataValue
@@ -587,6 +626,7 @@ final class IllucetAppModel: ObservableObject {
                     configuration = OutputCapabilityMatrix.normalized(settings.configuration())
                     FormatSelection.applyAutomaticSelection(to: &configuration, metadata: metadata)
                     configuration.accountID = accountID
+                    configuration.enginePreferences = enginePreferences
                     activeQuickStartPreset = nil
                     selectDefaultSubtitlesIfNeeded()
                     beginSponsorBlockPreview()
@@ -598,6 +638,7 @@ final class IllucetAppModel: ObservableObject {
                 throw error
             }
         } else {
+            let usesSitePreset = pendingRedownloadConfiguration == nil && siteDefaults?.preset == "compatible"
             configuration = pendingRedownloadConfiguration
                 ?? settings.configuration()
             pendingRedownloadConfiguration = nil
@@ -614,8 +655,20 @@ final class IllucetAppModel: ObservableObject {
                     metadata: metadata
                 )
             }
+            if usesSitePreset {
+                var compatible = configuration
+                compatible.preset = .compatible
+                compatible.videoCodec = .h264
+                compatible.container = .mp4
+                compatible = OutputCapabilityMatrix.normalized(compatible)
+                FormatSelection.applyAutomaticSelection(to: &compatible, metadata: metadata)
+                if (try? OutputCapabilityMatrix.validate(compatible, metadata: metadata)) != nil {
+                    configuration = compatible
+                }
+            }
         }
         configuration.accountID = accountID
+        configuration.enginePreferences = enginePreferences
         selectDefaultSubtitlesIfNeeded()
         beginSponsorBlockPreview()
         addRecent(metadata)
@@ -655,7 +708,7 @@ final class IllucetAppModel: ObservableObject {
             try await Task.sleep(for: .milliseconds(180))
             analysis = DeveloperFixtures.playlist
         } else {
-            let analyzer = try await runtime.playlistAnalyzer(accountID: accountID)
+            let analyzer = try await runtime.playlistAnalyzer(accountID: accountID, preferences: settings.extractionPreferences(for: .youtube))
             async let analysisValue = analyzer.analyze(
                 url: URL,
                 maximumEntries: settings.configuration()
@@ -670,6 +723,7 @@ final class IllucetAppModel: ObservableObject {
             ?? settings.configuration()
         pendingRedownloadConfiguration = nil
         baseConfiguration.accountID = accountID
+        baseConfiguration.enginePreferences = settings.extractionPreferences(for: .youtube)
         baseConfiguration.selectedVideoFormatID = nil
         baseConfiguration.selectedAudioFormatID = nil
         playlistDraft = PlaylistBatchDraft(

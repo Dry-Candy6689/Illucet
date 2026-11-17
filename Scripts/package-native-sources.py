@@ -58,6 +58,12 @@ def package(root: Path, output: Path) -> None:
     entries = [{"archive": pins[name + "_ARCHIVE"], "sha256": pins[name + "_SHA256"], "url": pins[name + "_URL"]}
                for name in ("CPYTHON", "QUICKJS", "FFMPEG", "LAME")]
     entries.extend(json.loads((root / "Config/NativeSupportSources.json").read_text()))
+    aria2 = root / "Config/Aria2.json"
+    if aria2.is_file():
+        entries.append(json.loads(aria2.read_text())["source"])
+    token_provider = root / "Config/TokenProvider.json"
+    if token_provider.is_file():
+        entries.append(json.loads(token_provider.read_text())["source"])
     files: list[tuple[Path, str]] = []
     for entry in entries:
         path = root / "Vendor/Downloads" / entry["archive"]

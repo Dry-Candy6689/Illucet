@@ -19,7 +19,7 @@ struct IllucetSnapshot: Codable, Equatable, Sendable {
     var downloadArchive: [DownloadArchiveEntry]
     var lastPreferencesExportAt: Date? = nil
 
-    static let currentSchemaVersion = 10
+    static let currentSchemaVersion = 11
 
     static let empty = Self(
         schemaVersion: currentSchemaVersion,

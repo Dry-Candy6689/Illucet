@@ -43,6 +43,7 @@ enum FilesFolderPickerSource: Hashable, Sendable {
     case confirmation
     case quickStart
     case playlist
+    case bulkImport
 }
 
 enum FilesFolderAliasEditorMode: Hashable, Sendable {

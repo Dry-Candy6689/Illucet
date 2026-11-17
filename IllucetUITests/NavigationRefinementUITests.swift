@@ -141,7 +141,7 @@ final class NavigationRefinementUITests: XCTestCase {
         selectWorkspaceTab("Settings", in: app)
         XCTAssertEqual(interface.frame.minY, rootY, accuracy: 3)
         selectWorkspaceTab("Settings", in: app)
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "YouTube accounts")).firstMatch.isHittable)
+        XCTAssertTrue(app.buttons["settings.accounts"].isHittable)
         capture(app, "Settings retap reaches root then top")
     }
 

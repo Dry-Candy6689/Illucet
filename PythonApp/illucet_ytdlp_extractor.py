@@ -19,10 +19,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 from urllib.parse import parse_qs, urljoin, urlsplit, urlunsplit
+from urllib.error import HTTPError as UrllibHTTPError
 
 import _illucet_native
 import certifi
 from yt_dlp import YoutubeDL, dependencies as ytdlp_dependencies
+from yt_dlp.networking.exceptions import HTTPError as YTDLPHTTPError
 from yt_dlp.utils import (
     DownloadError,
     ExtractorError,
@@ -58,6 +60,11 @@ def clear_recent_extractions() -> None:
     _recent_extractions.clear()
 
 
+def _recent_key(url: str) -> str:
+    preferences = illucet_ytdlp_provider.active_engine_preferences.get()
+    return url if not preferences else url + "#" + hashlib.sha256(json.dumps(preferences, sort_keys=True).encode()).hexdigest()
+
+
 def _recent_entry(url: str, request: dict[str, Any]):
     if "account_cookies" in request:
         clear_recent_extractions()
@@ -66,7 +73,7 @@ def _recent_entry(url: str, request: dict[str, Any]):
     for key, (deadline, _, _) in list(_recent_extractions.items()):
         if now >= deadline:
             del _recent_extractions[key]
-    return _recent_extractions.get(url)
+    return _recent_extractions.get(_recent_key(url))
 
 
 def _remember_extraction(url: str, request: dict[str, Any], info, result) -> None:
@@ -98,11 +105,11 @@ def _remember_extraction(url: str, request: dict[str, Any], info, result) -> Non
     if len(encoded) > min(_MAX_OUTPUT_BYTES, _RECENT_MAX_BYTES):
         return
     _recent_entry(url, request)
-    _recent_extractions.pop(url, None)
+    _recent_extractions.pop(_recent_key(url), None)
     while _recent_extractions and (len(_recent_extractions) >= _RECENT_MAX_ENTRIES
             or sum(len(entry[2]) for entry in _recent_extractions.values()) + len(encoded) > _RECENT_MAX_BYTES):
         _recent_extractions.popitem(last=False)
-    _recent_extractions[url] = (time.monotonic() + _RECENT_TTL_SECONDS, token, encoded)
+    _recent_extractions[_recent_key(url)] = (time.monotonic() + _RECENT_TTL_SECONDS, token, encoded)
     result["reuse_token"] = token
 _VIDEO_ID = re.compile(r"^[0-9A-Za-z_-]{11}$")
 _PLAYLIST_ID = re.compile(r"^[0-9A-Za-z_-]{2,128}$")
@@ -241,9 +248,11 @@ class _PlaylistURLIntent:
 class _SafeLogger:
     """Counts yt-dlp diagnostics but deliberately stores no message text."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, capture_access_failure: bool = False) -> None:
         self.warning_count = 0
         self.error_count = 0
+        self.capture_access_failure = capture_access_failure
+        self.access_failure = None
 
     @staticmethod
     def _checkpoint() -> None:
@@ -266,9 +275,12 @@ class _SafeLogger:
         self._checkpoint()
 
     def error(self, message: object) -> None:
-        del message
         self.error_count += 1
         self._checkpoint()
+        if self.capture_access_failure and isinstance(message, str):
+            failure = classify_extraction_error(RuntimeError(message[:8192]))
+            if failure.code in {"private_media", "login_required", "age_restriction", "membership_required", "service_challenge"}:
+                self.access_failure = failure
 
 
 def _checkpoint() -> None:
@@ -674,6 +686,7 @@ def _sanitize_format(raw_format: object) -> dict[str, object] | None:
         raw_format.get("dynamic_range"),
         maximum=64,
     )
+    frames_per_second = _finite_number(raw_format.get("fps"))
     is_hdr = (
         dynamic_range is not None
         and dynamic_range.lower() not in {"sdr", "none", "unknown"}
@@ -697,7 +710,7 @@ def _sanitize_format(raw_format: object) -> dict[str, object] | None:
             raw_format.get("resolution"),
             maximum=64,
         ),
-        "frames_per_second": _finite_number(raw_format.get("fps")),
+        "frames_per_second": frames_per_second if frames_per_second and frames_per_second > 0 else None,
         "dynamic_range": dynamic_range,
         "is_hdr": is_hdr,
         "audio_bitrate_kbps": _finite_number(raw_format.get("abr")),
@@ -1307,6 +1320,9 @@ def classify_extraction_error(error: BaseException) -> SafeExtractionFailure:
 
     classification_text = " ".join(str(item)[:8_192] for item in related)
     lowered = classification_text.lower()
+    # A bot/IP check must never authorize Automatic to expose a saved account.
+    if any(term in lowered for term in ("confirm you’re not a bot", "confirm you're not a bot", "confirm you are not a bot", "captcha", "too many requests", "rate limit")):
+        return SafeExtractionFailure("service_challenge", "The website is limiting or challenging this connection. Try again later.", False)
     mappings = (
         (
             ("private video", "this video is private"),
@@ -1316,7 +1332,9 @@ def classify_extraction_error(error: BaseException) -> SafeExtractionFailure:
         ),
         (
             (
-                "sign in to confirm",
+                "sign in to watch",
+                "sign in to view",
+                "sign in to access",
                 "login required",
                 "login-required",
                 "members-only",
@@ -1397,6 +1415,15 @@ def classify_extraction_error(error: BaseException) -> SafeExtractionFailure:
     for markers, code, message, retryable in mappings:
         if any(marker in lowered for marker in markers):
             return SafeExtractionFailure(code, message, retryable)
+    statuses = {getattr(item, "status", getattr(item, "code", None)) for item in related
+                if isinstance(item, (YTDLPHTTPError, UrllibHTTPError))}
+    if statuses & {401, 403, 412, 429}:
+        # An HTTP refusal by itself does not establish account-only content.
+        return SafeExtractionFailure("service_challenge", "The website refused or limited this connection. Try again later.", False)
+    if statuses & {404, 410}:
+        return SafeExtractionFailure("post_unavailable", "This media is unavailable or has been removed.", False)
+    if statuses & {408, 425, 500, 502, 503, 504}:
+        return SafeExtractionFailure("network_failure", "The website could not complete this request. Try again later.", True)
     if any(isinstance(item, ExtractorError) for item in related):
         return SafeExtractionFailure(
             "extraction_failed",
@@ -1411,7 +1438,7 @@ def classify_extraction_error(error: BaseException) -> SafeExtractionFailure:
 
 
 def _options(logger: _SafeLogger) -> dict[str, object]:
-    return {
+    result = {
         "age_limit": 0,
         "allow_unplayable_formats": False,
         "allowed_extractors": ["youtube"],
@@ -1443,6 +1470,13 @@ def _options(logger: _SafeLogger) -> dict[str, object]:
         "verbose": False,
         "warn_when_outdated": False,
     }
+    preferences = illucet_ytdlp_provider.active_engine_preferences.get()
+    client = preferences.get("youtubeClient", "default")
+    if client in {"web_safari", "web", "mweb", "ios", "tv"}:
+        result["extractor_args"] = {"youtube": {"player_client": [client]}}
+    import illucet_potoken
+    illucet_potoken.configure_options(result)
+    return result
 
 
 def _playlist_options(
@@ -1501,7 +1535,7 @@ def extract_playlist(
             "The bundled TLS certificate store is unavailable.",
         )
 
-    logger = _SafeLogger()
+    logger = _SafeLogger(capture_access_failure=True)
     _checkpoint()
     if emit_event is not None:
         emit_event(
@@ -1518,6 +1552,8 @@ def extract_playlist(
         options["extract_flat"] = False
     with illucet_accounts.downloader(request, ydl_factory, options) as ydl:
         info = ydl.extract_info(intent.extraction_url, download=False)
+    if info is None and logger.access_failure is not None:
+        raise logger.access_failure
     _checkpoint()
     analysis = _sanitize_playlist(
         info,
@@ -1557,7 +1593,7 @@ def extract_metadata(
         return result
     # Explicit analysis and retry preparation invalidate the older handoff even
     # if the subsequent extraction fails.
-    _recent_extractions.pop(normalized_url, None)
+    _recent_extractions.pop(_recent_key(normalized_url), None)
     if (
         ytdlp_dependencies.certifi is None
         or ytdlp_dependencies.certifi.where() != certifi.where()
@@ -2302,7 +2338,7 @@ def resolve_streams(
     _checkpoint()
     recent = _recent_entry(normalized_url, request)
     # Consume once. All recovery calls omit the token and must extract fresh.
-    _recent_extractions.pop(normalized_url, None)
+    _recent_extractions.pop(_recent_key(normalized_url), None)
     info = None
     if recent is not None and request.get("reuse_token") == recent[1]:
         candidate = json.loads(recent[2])["info"]

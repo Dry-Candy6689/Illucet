@@ -17,6 +17,7 @@ ALLOWED = (
     "Vendor/Frameworks/QuickJS.xcframework",
     "Vendor/Frameworks/IllucetMedia.xcframework",
     "Vendor/PythonPackages",
+    "Vendor/Frameworks/IllucetAria2.xcframework",
 )
 
 
@@ -51,6 +52,8 @@ def restore(source: Path, root: Path) -> None:
             if mode:
                 (stage / member.filename).chmod(mode)
         for relative in ALLOWED:
+            if relative.endswith("IllucetAria2.xcframework") and not (stage / relative).exists():
+                continue  # Older pinned runtimes rebuild aria2 from verified source after restoration.
             path = stage / relative
             required = path / "yt_dlp/version.py" if relative.endswith("PythonPackages") else path / "Info.plist"
             if not required.is_file():
@@ -58,6 +61,8 @@ def restore(source: Path, root: Path) -> None:
         replacements: list[tuple[Path, Path | None]] = []
         try:
             for relative in ALLOWED:
+                if not (stage / relative).exists():
+                    continue
                 target = root / relative
                 if (target.is_symlink() or not target.resolve().is_relative_to(root)
                         or (target.exists() and not target.is_dir())):

@@ -21,7 +21,7 @@ final class SharingAndCreatorUITests: XCTestCase {
         XCTAssertTrue(remember.waitForNonExistence(timeout: 5))
         selectWorkspaceTab("Settings", in: app)
         XCTAssertFalse(app.buttons["Privacy & diagnostics"].exists)
-        app.buttons["Shortcuts"].tap()
+        scrollUntilHittable("settings.sharing", in: app).tap()
         XCTAssertFalse(app.switches["shortcuts.background"].exists)
         screenshot("Shortcuts settings", app)
         XCTAssertTrue(app.descendants(matching: .any)["shortcuts.install"].exists)

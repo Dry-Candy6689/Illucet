@@ -61,7 +61,7 @@ extension IllucetAppModel {
     }
 
     var canAcceptClipboardLink: Bool {
-        !startupState.blocksInteraction && canPresentShortcutOptions
+        !presentsBulkImport && !startupState.blocksInteraction && canPresentShortcutOptions
             && !replaysPipGuide && pipGuideStep == nil && pendingSharedLink == nil
             && shortcutHandoff == nil && !isStartingDownload && !isStartingQuickStart
             && !quickStartInputRecovery.offersClipboardContinuation
@@ -94,7 +94,14 @@ extension IllucetAppModel {
             if lastAutomaticClipboardChange == change { lastAutomaticClipboardChange = nil }
             return
         }
-        guard containsURL == true, let url = LinkIntakePolicy.supportedURL(clipboard.readText()),
+        guard containsURL == true, stillCurrent() else { return }
+        let text = clipboard.readText()
+        if let text, let links = try? BulkLinkImport.links(in: text), links.filter(\.selected).count > 1, stillCurrent() {
+            if preferences.behavior == .suggest { clipboardBulkSuggestion = text }
+            else { openBulkImport(text: text) }
+            return
+        }
+        guard let url = LinkIntakePolicy.supportedURL(text),
               stillCurrent(), !LinkIntakePolicy.identifiesSameLink(URLText, url.absoluteString) else { return }
         switch preferences.behavior {
         case .suggest: clipboardSuggestion = url
@@ -127,8 +134,14 @@ extension IllucetAppModel {
         do {
             store = try inbox ?? SharedLinkInbox.live()
             sharedLinkInbox = try store.pending()
+            savedLinkBatches = try store.pendingBatches()
         }
         catch { return }
+        if let batch = savedLinkBatches.first(where: { $0.presentedAt == nil }), canAcceptClipboardLink,
+           URLText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !presentsBulkImport {
+            openSharedBatch(batch)
+            return
+        }
         guard !startupState.blocksInteraction, !presentsOnboarding, !isAnalyzing,
               pendingSharedLink == nil, !presentsMetadata, !presentsConfiguration,
               !presentsPlaylistBatch, !presentsConfirmation, !presentsQuickStartConfirmation,
@@ -161,8 +174,7 @@ extension IllucetAppModel {
         } catch { alert = AppAlert(title: "Couldn’t remove link", message: "The saved link remains available. Try again.") }
     }
     func receiveSharedLink(_ url: URL) {
-        guard let safe = SharedLinkParser.canonicalURL(url),
-              (try? YouTubeURLIntentClassifier.classify(safe)) != nil else { return }
+        guard let safe = SharedLinkParser.canonicalURL(url), MediaSite.recognize(safe) != nil else { return }
         if pendingSharedLink != nil || presentsMetadata || presentsConfiguration || presentsPlaylistBatch || presentsConfirmation || presentsQuickStartConfirmation {
             do {
                 try SharedLinkInbox.live().save(safe)

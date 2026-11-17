@@ -19,8 +19,8 @@ final class YouTubeSignInSession: NSObject, ObservableObject, WKNavigationDelega
         webView.allowsBackForwardNavigationGestures = true
     }
 
-    func open() {
-        webView.load(URLRequest(url: URL(string: "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F")!))
+    func open(site: MediaSite = .youtube) {
+        webView.load(URLRequest(url: site == .youtube ? URL(string: "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F")! : site.loginURL))
     }
 
     #if DEBUG

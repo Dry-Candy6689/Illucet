@@ -368,7 +368,7 @@ private struct BatchItemRow: View {
                         Text(item.state.label)
                             .foregroundStyle(item.state.tint(accent: theme.foregroundAccent))
                         if let job, !job.state.isTerminal {
-                            brandedText(job.stage.rawValue)
+                            brandedText(JobStatusPresentation(job: job).stage)
                         }
                         if let fraction = job.flatMap({ JobStatusPresentation(job: $0).fraction }) {
                             Text(

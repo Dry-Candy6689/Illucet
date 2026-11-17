@@ -62,8 +62,8 @@ final class UsabilityCleanupUITests: XCTestCase {
         capture("Inline movable Home Quick Start presets \(dark ? "dark" : "light")", app)
 
         selectWorkspaceTab("Settings", in: app)
-        tap(app.buttons["Shortcuts"], in: app)
-        XCTAssertTrue(app.navigationBars["Shortcuts"].waitForExistence(timeout: 4))
+        tap(app.buttons["Sharing & Shortcuts"], in: app)
+        XCTAssertTrue(app.navigationBars["Sharing & Shortcuts"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.descendants(matching: .any)["shortcuts.install"].exists)
         XCTAssertTrue(app.links["Get Illucet shortcut"].exists || app.buttons["Get Illucet shortcut"].exists)
         XCTAssertFalse(app.staticTexts["Use from the share sheet"].exists)

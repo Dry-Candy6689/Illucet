@@ -27,6 +27,7 @@ Scripts/fetch-stage0-dependencies.sh
 Scripts/build-python-ios.sh
 Scripts/build-quickjs-ios.sh
 Scripts/build-ffmpeg-ios.sh
+python3 Scripts/build-aria2-ios.py
 xcodegen generate
 ```
 

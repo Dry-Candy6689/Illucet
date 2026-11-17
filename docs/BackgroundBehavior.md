@@ -32,6 +32,24 @@ measurement remains indeterminate. The weighted whole-job estimate is retained o
 for aggregate/system continuation bookkeeping. Foreground entry reads authoritative
 coordinator snapshots; delayed UI events cannot roll back a newer snapshot.
 
+## Optional aria2 transfers
+
+aria2 is an explicit alternative for public direct HTTP/HTTPS video, audio and
+original images. Automatic keeps the native path. The serial native bridge installs
+no signal handlers and opens no RPC server. Calls share the existing job limits,
+exact resolved source facts, cancellation and output verification.
+
+Unlike daemon-owned URLSession tasks, aria2 requires foreground or admitted
+in-process execution time. Pause or execution expiry waits for library teardown and
+removes incomplete staging. Resume starts a fresh transfer; verified complete
+pipeline sources retain their existing reuse rules. Its file data and binary
+control files are job-local, and abandoned stages are discarded before reuse.
+Session exports, logs and cookie imports are disabled; signed addresses and headers
+remain in memory. Account-bound transfers use the applicable existing engine.
+Disallowed network changes and network-setting changes stop active in-process
+transfers before their slots are released. The queue waits for an allowed path
+or the existing cellular decision, then restarts incomplete aria2 files.
+
 ## Direct HTTP and Range
 
 Direct failure classification preserves HTTP truth: 401 is permanent, 403/410 use

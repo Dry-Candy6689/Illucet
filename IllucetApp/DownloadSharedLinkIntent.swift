@@ -4,7 +4,7 @@ import UIKit
 
 struct DownloadSharedLinkIntent: LiveActivityIntent, ProgressReportingIntent {
     static let title: LocalizedStringResource = "Download with Illucet"
-    static let description = IntentDescription("Download a shared YouTube link using your preferences in Illucet Settings → Shortcuts.")
+    static let description = IntentDescription("Download shared media using your preferences in Illucet Settings → Sharing & Shortcuts.")
     static let supportedModes: IntentModes = [.background, .foreground(.dynamic)]
 
     @Parameter(title: "Links") var links: [URL]
@@ -14,11 +14,21 @@ struct DownloadSharedLinkIntent: LiveActivityIntent, ProgressReportingIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
+        guard !links.isEmpty else { throw SharedLinkIntentError.missingInput }
         let candidates = Self.canonicalLinks(links)
         guard !candidates.isEmpty else { throw SharedLinkIntentError.unsupported }
-        let link: URL
-        if candidates.count == 1 { link = candidates[0] }
-        else { link = try await $links.requestDisambiguation(among: candidates, dialog: "Which link should Illucet download?") }
+        if candidates.count > 1 {
+            let batch = try SharedLinkInbox.live().saveBulk(candidates, presented: true)
+            let began = ContinuousClock.now
+            let message: String
+            if #available(iOS 27, *) {
+                message = try await performBackgroundTask { @Sendable in
+                    try await prepareBatch(batch, began: began, extended: true)
+                }
+            } else { message = try await prepareBatch(batch, began: began, extended: false) }
+            return .result(value: message, dialog: "\(message)")
+        }
+        let link = candidates[0]
         let request = try SharedLinkInbox.live().save(link, shortcut: true)
         let began = ContinuousClock.now
         JobStatusPresentation.updateSystemProgress(progress, stage: "Preparing download", fraction: nil)
@@ -49,6 +59,57 @@ struct DownloadSharedLinkIntent: LiveActivityIntent, ProgressReportingIntent {
     }
 
     @MainActor
+    private func prepareBatch(_ request: SharedLinkBatch, began: ContinuousClock.Instant, extended: Bool) async throws -> String {
+        let model = IllucetApplicationServices.model
+        while model.startupState == .loading {
+            try Task.checkCancellation()
+            if !extended && began.duration(to: .now) >= .seconds(18) { return "Shared links saved. Open Illucet to continue." }
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        try await model.waitForShortcutStartup()
+        let preferences = model.settings.shortcutPreferences
+        func review(_ reason: String) async -> String {
+            if preferences.allowsForeground, (try? await foreground()) != nil,
+               model.canPresentShortcutOptions, model.URLText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                model.openSharedBatch(request)
+            } else { model.refreshSharedLinks() }
+            return reason
+        }
+        switch preferences.behavior {
+        case .save:
+            model.refreshSharedLinks()
+            return "Saved \(request.urls.count) links for later."
+        case .ask, .options:
+            return await review("Shared links saved. Review them in Illucet.")
+        case .download:
+            var result: Result<DownloadBatch, Error>?
+            let task = Task { @MainActor in
+                do { result = .success(try await model.submitShortcutBatch(request.urls, id: request.id, preferences: preferences)) }
+                catch { result = .failure(error) }
+            }
+            defer { task.cancel() }
+            do {
+                while result == nil {
+                    try Task.checkCancellation()
+                    if !extended && began.duration(to: .now) >= .seconds(18) {
+                        task.cancel()
+                        return await review("Shared links saved. Open Illucet to finish preparing them.")
+                    }
+                    try await Task.sleep(for: .milliseconds(100))
+                }
+                let batch = try result!.get()
+                try? SharedLinkInbox.live().removeBulk(request.id)
+                model.refreshSharedLinks()
+                return "Queued \(batch.items.count) shared media items."
+            } catch is CancellationError {
+                return "Shared links saved. Open Illucet to continue."
+            } catch {
+                return await review("Shared links saved. \(error.localizedDescription)")
+            }
+        }
+    }
+
+    @MainActor
     private func prepareAndRun(_ request: SharedLink, began: ContinuousClock.Instant, extended: Bool) async throws -> String {
         let model = IllucetApplicationServices.model
         while model.startupState == .loading {
@@ -62,12 +123,19 @@ struct DownloadSharedLinkIntent: LiveActivityIntent, ProgressReportingIntent {
         }
         try await model.waitForShortcutStartup()
         let preferences = model.settings.shortcutPreferences
-        // Only the user's explicit review behavior opens UI. An immediate
-        // download never changes foreground apps, even when preparation stalls.
+        if preferences.behavior == .save {
+            try SharedLinkInbox.live().markPresented(request.id)
+            model.refreshSharedLinks()
+            return "Link saved for later."
+        }
         if preferences.behavior != .download {
-            try await foreground()
-            model.presentShortcutHandoff(.init(request: request, reason: "Choose how to download this link."))
-            return "Continue in Illucet."
+            let reason = "Choose how to download this link."
+            if preferences.allowsForeground, (try? await foreground()) != nil {
+                model.presentShortcutHandoff(.init(request: request, reason: reason))
+                return "Continue in Illucet."
+            }
+            try await model.deferShortcut(request, message: reason, automatic: false)
+            return "Link saved. Open Illucet to review it."
         }
         if model.presentsOnboarding {
             let message = "Open Illucet to finish setup. Your link is saved."
@@ -96,7 +164,13 @@ struct DownloadSharedLinkIntent: LiveActivityIntent, ProgressReportingIntent {
             switch result {
             case let .foreground(handoff):
                 try await model.deferShortcut(request, message: handoff.reason, automatic: false)
-                message = "Open Illucet to continue. Your link is saved."
+                if model.settings.shortcutPreferences.allowsForeground, (try? await foreground()) != nil {
+                    try? SharedLinkInbox.live().markPresented(request.id)
+                    model.presentShortcutHandoff(handoff)
+                    message = "Continue in Illucet."
+                } else { message = "Open Illucet to continue. Your link is saved." }
+            case let .admittedBatch(batch):
+                message = "Queued \(batch.items.count) shared media items."
             case let .admitted(admitted):
                 await model.liveActivityController.synchronize(jobs: await model.coordinator.currentJobs(),
                     enabled: model.settings.liveActivities, intentStart: true)
@@ -132,6 +206,18 @@ struct DownloadSharedLinkIntent: LiveActivityIntent, ProgressReportingIntent {
             await model.liveActivityController.synchronize(jobs: await model.coordinator.currentJobs(),
                 enabled: model.settings.liveActivities)
             await model.persistImmediately()
+            let foregroundMessage: String? = switch error {
+            case YouTubeTokenError.needsForeground: YouTubeTokenError.needsForeground.localizedDescription
+            case RedditPageError.needsForeground: RedditPageError.needsForeground.localizedDescription
+            default: nil
+            }
+            if let message = foregroundMessage {
+                try await model.deferShortcut(request, message: message, automatic: true)
+                if model.settings.shortcutPreferences.allowsForeground, (try? await foreground()) != nil {
+                    await model.resumeDeferredShortcuts()
+                }
+                return "Link saved. \(message)"
+            }
             if error is PreparationBudgetExpired || error is CancellationError {
                 let message = "Your progress is saved. Open Illucet to continue."
                 JobStatusPresentation.updateSystemProgress(progress, stage: message, fraction: nil)
@@ -155,7 +241,28 @@ struct DownloadSharedLinkIntent: LiveActivityIntent, ProgressReportingIntent {
 
     static func canonicalLinks(_ links: [URL]) -> [URL] {
         var seen = Set<URL>()
-        return links.prefix(16).compactMap(SharedLinkParser.canonicalURL).filter { seen.insert($0).inserted }
+        guard links.count <= 500 else { return [] }
+        var result: [URL] = []
+        var byteBudget = BulkLinkImport.maximumBytes
+        for url in links {
+            let raw = url.absoluteString
+            guard raw.utf8.count <= byteBudget else { return [] }
+            byteBudget -= raw.utf8.count
+            // Some Shortcuts versions flatten a URL-list magic variable into
+            // one percent-encoded text URL. Recover only validated media links.
+            let decoded = raw.removingPercentEncoding ?? raw
+            let candidates: [URL]
+            if decoded.contains(where: \.isWhitespace) {
+                candidates = (try? BulkLinkImport.links(in: decoded))?.filter(\.selected).map(\.url) ?? []
+            } else {
+                candidates = SharedLinkParser.canonicalURL(url).map { [$0] } ?? []
+            }
+            for candidate in candidates where seen.insert(candidate).inserted {
+                result.append(candidate)
+                guard result.count <= 500 else { return [] }
+            }
+        }
+        return result
     }
 
     static func admissionMessage(_ job: DownloadJob) -> String {

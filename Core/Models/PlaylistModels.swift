@@ -1,6 +1,7 @@
 import Foundation
 
 enum PlaylistKind: String, Codable, CaseIterable, Identifiable, Sendable {
+    case importedLinks
     case playlist
     case mix
     case shorts
@@ -11,6 +12,7 @@ enum PlaylistKind: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var label: String {
         switch self {
+        case .importedLinks: "Imported links"
         case .playlist: "Playlist"
         case .mix: "Mix / radio"
         case .shorts: "Shorts playlist"
@@ -466,6 +468,13 @@ struct BatchJobMembership: Codable, Equatable, Sendable {
 
 struct DownloadArchiveEntry: Codable, Equatable, Hashable, Identifiable,
     Sendable {
+    static func completed(job: DownloadJob, batchID: UUID) -> Self {
+        if let identity = job.configuration.sourceIdentity {
+            return Self(site: identity.site.rawValue, videoID: identity.postID + ":" + identity.kind.rawValue + ":" + identity.assetID,
+                        completedAt: job.updatedAt, historyRecordID: nil, batchID: batchID)
+        }
+        return .youtube(videoID: job.videoID, completedAt: job.updatedAt, batchID: batchID)
+    }
     let site: String
     let videoID: String
     let completedAt: Date

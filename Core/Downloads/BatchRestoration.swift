@@ -73,11 +73,7 @@ enum BatchRestoration {
                     )
                     if matchingJob.state == .completed,
                        matchingJob.exportOutcome != .duplicateSkipped {
-                        let record = DownloadArchiveEntry.youtube(
-                            videoID: matchingJob.videoID,
-                            completedAt: matchingJob.updatedAt,
-                            batchID: batch.id
-                        )
+                        let record = DownloadArchiveEntry.completed(job: matchingJob, batchID: batch.id)
                         archiveByID[record.id] = record
                     }
                 } else if item.jobID != nil,

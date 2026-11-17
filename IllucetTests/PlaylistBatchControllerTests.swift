@@ -116,6 +116,35 @@ struct PlaylistBatchControllerTests {
     }
 
     @Test
+    func admissionIsHeldUntilSnapshotAndRetryDoesNotDuplicateBatch() async throws {
+        let harness = BatchControllerHarness()
+        let controller = makeController(harness: harness)
+        let id = UUID()
+        let batch = try await controller.createBatch(
+            analysis: fixtureAnalysis, selection: .entirePlaylist, configuration: .standard,
+            destinationStructure: .selectedFolder, skipArchivedItems: true,
+            admissionID: id, holdForPersistence: true
+        )
+        #expect(batch.id == id)
+        #expect(batch.admissionPaused == true)
+        #expect(await harness.enqueuedJobs.isEmpty)
+
+        let retried = try await controller.createBatch(
+            analysis: fixtureAnalysis, selection: .entirePlaylist, configuration: .standard,
+            destinationStructure: .selectedFolder, skipArchivedItems: true,
+            admissionID: id, holdForPersistence: true
+        )
+        #expect(retried.id == id)
+        #expect(await controller.currentBatches().count == 1)
+        #expect(await harness.enqueuedJobs.isEmpty)
+
+        await controller.resume(id)
+        try await waitUntil { await harness.enqueuedJobs.count == 3 }
+        let jobs = await harness.enqueuedJobs
+        #expect(jobs.allSatisfy { $0.batchMembership?.batchID == id })
+    }
+
+    @Test
     func controllerExpandsItemsOnceAndArchivesVerifiedCompletion()
         async throws {
         let harness = BatchControllerHarness()

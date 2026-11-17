@@ -129,17 +129,20 @@ final class YTDLPHLSPlaylistResolver:
     private let authentication: AccountAuthentication?
     private let networking: any HLSPlaylistNetworking
     private let policy: HLSPlaylistSessionPolicy
+    private let preferences: EnginePreferences?
 
     init(
         python: PythonEngine,
         networking: any HLSPlaylistNetworking = URLSessionHLSPlaylistHTTPClient(),
         policy: HLSPlaylistSessionPolicy = .secure,
-        authentication: AccountAuthentication? = nil
+        authentication: AccountAuthentication? = nil,
+        preferences: EnginePreferences? = nil
     ) {
         self.python = python
         self.authentication = authentication
         self.networking = networking
         self.policy = policy
+        self.preferences = preferences
     }
 
     func resolveHLSPlaylist(
@@ -166,7 +169,7 @@ final class YTDLPHLSPlaylistResolver:
         do {
             response = try await python.executeAuthenticated(
                 requestID: PythonRequestIDAllocator.next(),
-                requestJSON: requestJSON, authentication: authentication
+                requestJSON: requestJSON, authentication: authentication, preferences: preferences
             )
         } catch let error as AccountError {
             throw error

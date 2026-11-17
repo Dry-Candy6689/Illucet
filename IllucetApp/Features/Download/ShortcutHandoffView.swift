@@ -24,7 +24,7 @@ struct ShortcutHandoffView: View {
                                     let result = try await model.submitShortcut(handoff.request, behaviorOverride: .download)
                                     starting = false
                                     switch result {
-                                    case .admitted:
+                                    case .admitted, .admittedBatch:
                                         dismiss()
                                         model.selectedTab = .queue
                                     case let .foreground(next): model.shortcutHandoff = next

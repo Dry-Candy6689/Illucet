@@ -90,7 +90,7 @@ struct JobStatusPresentation: Equatable, Sendable {
         if job.resumesOnForeground { stage = "Open Illucet to continue" }
         else {
             switch job.state {
-            case .running: stage = job.stage.rawValue
+            case .running: stage = job.displayStage
             case .queued: stage = "Queued"
             case .waitingForNetwork: stage = "Waiting for a connection"
             case .waitingForWiFi: stage = "Waiting for Wi-Fi"

@@ -27,20 +27,36 @@ struct DownloadConfigurationView: View {
                     VStack(spacing: 18) {
                         sourceHeader
                         AccountBindingLabel(accountID: model.configuration.accountID)
+                        Picker("Account use", selection: Binding(get: { model.configuration.enginePreferences?.accountAccess ?? .automatic }, set: {
+                            var value = model.configuration.enginePreferences ?? .init(); value.accountAccess = $0
+                            model.configuration.enginePreferences = value
+                        })) {
+                            ForEach(AccountAccessPolicy.allCases) { Text($0.label).tag($0) }
+                        }
                         modeSelector
+                        DisclosureGroup("Download engine") {
+                            Picker("Engine", selection: Binding(get: { model.configuration.enginePreferences?.download ?? .automatic }, set: {
+                                var value = model.configuration.enginePreferences ?? .init(); value.download = $0; model.configuration.enginePreferences = value
+                            })) { ForEach(DownloadEngineChoice.allCases) { Text($0.label).tag($0) } }
+                            Text("Automatic prefers native transfers. yt-dlp uses in-app execution and may restart incomplete transfers after suspension.")
+                                .font(.caption).foregroundStyle(.secondary)
+                            if model.configuration.enginePreferences?.download == .aria2 {
+                                Text(Aria2TransferPolicy.explanation).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }.illucetCard()
                         if !isThumbnailOnly && !isSubtitlesOnly {
                             presetSelector
                             modeOptions
                         }
-                        if !isSubtitlesOnly {
+                        if !isSubtitlesOnly && !metadata.thumbnails.isEmpty {
                             if !isThumbnailOnly { MetadataSidecarOptions(configuration: $model.configuration) }
                             thumbnailOptions
                         }
                         if !isThumbnailOnly {
-                            subtitleOptions
+                            if metadata.sourceIdentity == nil || hasSelectableSubtitles { subtitleOptions }
                             if !isSubtitlesOnly {
-                                chapterAndBundleOptions
-                                SponsorBlockDownloadOptions()
+                                if metadata.sourceIdentity == nil || !metadata.chapters.isEmpty { chapterAndBundleOptions }
+                                if metadata.sourceIdentity == nil { SponsorBlockDownloadOptions() }
                             }
                         }
                         destinationOptions
@@ -144,7 +160,9 @@ struct DownloadConfigurationView: View {
     }
 
     private var sourceHeader: some View {
-        HStack(spacing: 13) {
+        VStack(alignment: .leading, spacing: 10) {
+            SiteSourceLabel(site: metadata.sourceIdentity?.site ?? .youtube)
+            HStack(spacing: 13) {
             AsyncImage(url: metadata.thumbnails.last?.url) { phase in
                 if case let .success(image) = phase {
                     image.resizable().scaledToFill()
@@ -166,6 +184,7 @@ struct DownloadConfigurationView: View {
                 .foregroundStyle(.secondary)
             }
             Spacer()
+            }
         }
         .illucetCard()
         .accessibilityElement(children: .combine)
@@ -174,7 +193,7 @@ struct DownloadConfigurationView: View {
     private var modeSelector: some View {
         VStack(alignment: .leading, spacing: 8) {
             Menu {
-                ForEach(DownloadMode.allCases) { mode in
+                ForEach(DownloadMode.allCases.filter { metadata.sourceIdentity == nil || sourceModeAvailability.status(for: $0).permitsSelection }) { mode in
                     let availability = sourceModeAvailability.status(for: mode)
                     Button {
                         model.selectMode(mode)
@@ -186,18 +205,22 @@ struct DownloadConfigurationView: View {
                     .accessibilityValue(model.configuration.effectiveOutputIdentity == mode.effectiveOutputIdentity ? "Selected" : "Not selected")
                     .accessibilityIdentifier("configuration.mode.\(mode.id)")
                 }
-                Button { model.selectThumbnailBehavior(.thumbnailOnly) } label: {
-                    Label("Thumbnail Only", systemImage: isThumbnailOnly ? "checkmark" : "photo")
+                if metadata.sourceIdentity == nil || !metadata.thumbnails.isEmpty {
+                    Button { model.selectThumbnailBehavior(.thumbnailOnly) } label: {
+                        Label("Thumbnail Only", systemImage: isThumbnailOnly ? "checkmark" : "photo")
+                    }
+                    .disabled(metadata.thumbnails.isEmpty)
+                    .accessibilityIdentifier("configuration.mode.Thumbnail Only")
                 }
-                .disabled(metadata.thumbnails.isEmpty)
-                .accessibilityIdentifier("configuration.mode.Thumbnail Only")
-                Button { model.selectSubtitlesOnly() } label: {
-                    Label(hasSelectableSubtitles ? "Subtitles Only" : "Subtitles Only — No available subtitles",
-                          systemImage: isSubtitlesOnly ? "checkmark" : "captions.bubble")
+                if metadata.sourceIdentity == nil || hasSelectableSubtitles {
+                    Button { model.selectSubtitlesOnly() } label: {
+                        Label(hasSelectableSubtitles ? "Subtitles Only" : "Subtitles Only — No available subtitles",
+                              systemImage: isSubtitlesOnly ? "checkmark" : "captions.bubble")
+                    }
+                    .disabled(!hasSelectableSubtitles)
+                    .accessibilityValue(isSubtitlesOnly ? "Selected" : "Not selected")
+                    .accessibilityIdentifier("configuration.mode.Subtitles Only")
                 }
-                .disabled(!hasSelectableSubtitles)
-                .accessibilityValue(isSubtitlesOnly ? "Selected" : "Not selected")
-                .accessibilityIdentifier("configuration.mode.Subtitles Only")
             } label: {
                 ViewThatFits(in: .horizontal) {
                     HStack {

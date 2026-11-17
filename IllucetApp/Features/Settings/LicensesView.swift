@@ -33,7 +33,7 @@ struct LicensesView: View {
                 versionRow(
                     "yt-dlp EJS",
                     model.updateStatus.activeEJSVersion,
-                    "The Unlicense"
+                    "Unlicense, MIT and ISC"
                 )
                 versionRow(
                     "QuickJS-ng",
@@ -50,6 +50,10 @@ struct LicensesView: View {
                     versionRow("OpenSSL", version, "Apache 2.0")
                 }
                 versionRow("certifi", model.updateStatus.activeCertifiVersion ?? DependencyVersions.certifi, "MPL 2.0")
+                versionRow("Instaloader", "4.16", "MIT")
+                versionRow("aria2", String(cString: illucet_aria2_version()), "GPL 2.0 or later · combined under GPL 3.0")
+                versionRow("BgUtils", "4.0.3", "MIT")
+                Link("Site glyphs · Simple Icons · CC0", destination: URL(string:"https://github.com/simple-icons/simple-icons")!)
             }
 
             Section("SponsorBlock") {

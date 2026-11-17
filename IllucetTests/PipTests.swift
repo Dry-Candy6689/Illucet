@@ -401,7 +401,10 @@ struct PipTests {
         #expect(pip.step == .finish)
         #expect(!pip.finishedTyping)
         pip.advance()
-        try await Task.sleep(for: .milliseconds(550))
+        let deadline = ContinuousClock.now + .seconds(4)
+        while pip.isLeaving && ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(20))
+        }
         #expect(!pip.isGuiding)
         #expect(!pip.isLeaving)
         #expect(pip.exitCoverOpacity == 0)

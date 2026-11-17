@@ -1,6 +1,10 @@
 import Foundation
 
-protocol RuntimeProviding: Sendable {
+protocol RuntimeProviding: ExternalMediaProviding, Sendable {
+    func configuredExtractor(accountID: UUID?, preferences: EnginePreferences?) async throws -> any ExtractorEngine
+    func configuredResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any StreamResolver
+    func configuredDASHResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any DASHFragmentResolving
+    func configuredHLSResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any HLSPlaylistResolving
     func makeExtractor() async throws -> any ExtractorEngine
     func makeResolver() async throws -> any StreamResolver
     func makeDASHFragmentResolver() async throws
@@ -18,6 +22,10 @@ protocol RuntimeProviding: Sendable {
 }
 
 extension RuntimeProviding {
+    func configuredHLSResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any HLSPlaylistResolving { try await makeHLSPlaylistResolver(accountID: accountID) }
+    func configuredExtractor(accountID: UUID?, preferences: EnginePreferences?) async throws -> any ExtractorEngine { try await makeExtractor(accountID: accountID) }
+    func configuredResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any StreamResolver { try await makeResolver(accountID: accountID) }
+    func configuredDASHResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any DASHFragmentResolving { try await makeDASHFragmentResolver(accountID: accountID) }
     func makeExtractor(accountID: UUID?) async throws -> any ExtractorEngine {
         guard accountID == nil else { throw AccountError.unavailable }
         return try await makeExtractor()
@@ -52,6 +60,20 @@ extension RuntimeProviding {
 }
 
 extension RuntimeEnvironment: RuntimeProviding {
+    func configuredHLSResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any HLSPlaylistResolving {
+        YTDLPHLSPlaylistResolver(python: try await startedPython(),
+            authentication: accountID.map { AccountAuthentication(id: $0, store: accounts) },
+            preferences: preferences ?? .init())
+    }
+    func configuredExtractor(accountID: UUID?, preferences: EnginePreferences?) async throws -> any ExtractorEngine {
+        try await extractor(accountID: accountID, preferences: preferences ?? .init())
+    }
+    func configuredResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any StreamResolver {
+        try await resolver(accountID: accountID, preferences: preferences ?? .init())
+    }
+    func configuredDASHResolver(accountID: UUID?, preferences: EnginePreferences?) async throws -> any DASHFragmentResolving {
+        try await resolver(accountID: accountID, preferences: preferences ?? .init())
+    }
     func makeExtractor(accountID: UUID?) async throws -> any ExtractorEngine {
         try await extractor(accountID: accountID)
     }

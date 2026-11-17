@@ -98,8 +98,10 @@ class GitHub:
             raise ReleaseError(f"Asset size mismatch: {asset['name']}")
 
     def create(self, tag: str) -> None:
+        notes = Path(__file__).resolve().parents[1] / 'docs' / 'releases' / f'{tag[1:]}.md'
+        notes_arguments = ('--notes-file', str(notes)) if notes.is_file() else ('--notes', NOTES)
         self.command('release', 'create', tag, '--verify-tag', '--draft',
-                     '--title', f'Illucet {tag[1:]}', '--notes', NOTES)
+                     '--title', f'Illucet {tag[1:]}', *notes_arguments)
 
     def upload(self, tag: str, path: Path) -> None:
         # Never use --clobber: previously uploaded files must stay intact.

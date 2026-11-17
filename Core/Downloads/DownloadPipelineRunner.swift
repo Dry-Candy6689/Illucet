@@ -6,6 +6,7 @@ import Foundation
 final class DownloadPipelineRunner: @unchecked Sendable {
     let runtime: any RuntimeProviding
     private let downloader: any StreamDownloading
+    private let aria2Downloader: any Aria2Downloading
     let DASHDownloader: (any DASHFragmentDownloading)?
     let DASHAssembler: (any DASHLocalStreamAssembling)?
     let HLSDownloader: (any HLSResourceDownloading)?
@@ -32,6 +33,7 @@ final class DownloadPipelineRunner: @unchecked Sendable {
     init(
         runtime: any RuntimeProviding,
         downloader: any StreamDownloading,
+        aria2Downloader: any Aria2Downloading = NativeAria2Downloader.shared,
         DASHDownloader: (any DASHFragmentDownloading)? = nil,
         DASHAssembler: (any DASHLocalStreamAssembling)? = nil,
         HLSDownloader: (any HLSResourceDownloading)? = nil,
@@ -48,6 +50,7 @@ final class DownloadPipelineRunner: @unchecked Sendable {
     ) {
         self.runtime = runtime
         self.downloader = downloader
+        self.aria2Downloader = aria2Downloader
         self.DASHDownloader = DASHDownloader
         self.DASHAssembler = DASHAssembler
         self.HLSDownloader = HLSDownloader
@@ -87,7 +90,9 @@ final class DownloadPipelineRunner: @unchecked Sendable {
             exportFlow: exportFlow,
             thumbnails: thumbnails,
             subtitleWorkflow: activeSubtitleWorkflow,
-            fileManager: fileManager
+            fileManager: fileManager,
+            aria2Downloader: aria2Downloader,
+            diagnostics: diagnostics
         )
         finalizer = DownloadPipelineFinalizer(
             exportFlow: exportFlow,
@@ -133,16 +138,23 @@ final class DownloadPipelineRunner: @unchecked Sendable {
             stage: .analyzing
         )
         job = await context.checkpoint(job, phase: .analyzing)
-        let extractor = try await runtime.makeExtractor(accountID: job.configuration.accountID)
-        let analysis = try await extractor.analyzeForDownload(
-            url: job.sourceURL, allowRecent: mayReuseRecentAnalysis
-        )
+        let extractor = try await runtime.configuredExtractor(accountID: job.configuration.sourceIdentity == nil ? job.configuration.accountID : nil, preferences: job.configuration.enginePreferences)
+        let analysis: DownloadAnalysis
+        if job.configuration.sourceIdentity != nil {
+            analysis = DownloadAnalysis(metadata: try await runtime.externalMetadata(url: job.sourceURL, configuration: job.configuration), reuseToken: nil)
+        } else {
+            analysis = try await extractor.analyzeForDownload(url: job.sourceURL, allowRecent: mayReuseRecentAnalysis)
+        }
         let metadata = analysis.metadata
         try Task.checkCancellation()
         guard metadata.videoID == job.videoID else {
             throw MediaProcessorError.verificationMismatch(
                 "The reanalyzed media identity changed."
             )
+        }
+        if metadata.sourceIdentity?.kind == .image {
+            _ = try await specialOutputPipeline.runImage(job: job, metadata: metadata, runtime: runtime, context: context)
+            return
         }
         if job.configuration.isSubtitlesOnly {
             try OutputCapabilityMatrix.validate(
@@ -237,7 +249,7 @@ final class DownloadPipelineRunner: @unchecked Sendable {
                 job: job,
                 filename: filename,
                 fileExtension: outputPlan.fileExtension,
-                defaultHandling: duplicateSettings.duplicateHandling,
+                defaultHandling: job.configuration.duplicateHandlingOverride ?? duplicateSettings.duplicateHandling,
                 folderBookmark: await context.folderBookmarkSnapshot()
             )
             switch primaryDuplicate {
@@ -276,7 +288,8 @@ final class DownloadPipelineRunner: @unchecked Sendable {
             sourceURL: job.sourceURL,
             expectedVideoID: job.videoID,
             accountID: job.configuration.accountID,
-            reuseToken: analysis.reuseToken
+            reuseToken: analysis.reuseToken,
+            configuration: job.configuration
         )
         var exactExpectedBytesByFormatID: [String: Int64] = [:]
         for format in metadata.formats {
@@ -383,23 +396,16 @@ final class DownloadPipelineRunner: @unchecked Sendable {
                     reusedSource = false
                     let baseBytes = completedBytes
                     switch resolvedSource {
+                    case let .external(_, asset):
+                        let result = try await transferExternal(asset, job: job, destination: destination,
+                            directory: temporaryRoot, expectedBytes: reliableExpectedBytes,
+                            baseBytes: baseBytes, combinedExpectedBytes: knownExpectedTotal, context: context)
+                        file = result.0; transferResult = result.1
                     case let .direct(_, stream):
-                        let result = try await downloader.download(
-                            stream,
-                            jobID: jobID,
-                            destinationURL: destination,
-                            verifiedExpectedBytes: reliableExpectedBytes
-                        ) { progress in
-                            Task {
-                                await context.recordTransferProgress(
-                                    progress,
-                                    baseBytes,
-                                    knownExpectedTotal
-                                )
-                            }
-                        }
-                        file = result.fileURL
-                        transferResult = result
+                        let result = try await transferDirect(stream, job: job, destination: destination,
+                            directory: temporaryRoot, expectedBytes: reliableExpectedBytes,
+                            baseBytes: baseBytes, combinedExpectedBytes: knownExpectedTotal, context: context)
+                        file = result.0; transferResult = result.1
                     case let .DASH(_, plan):
                         try await context.requireExecution(jobID)
                         let acquisition = try await acquireDASHSource(
@@ -1249,6 +1255,70 @@ final class DownloadPipelineRunner: @unchecked Sendable {
                 forKeys: [.fileSizeKey]
             ).fileSize
         ).map(Int64.init) ?? 0
+    }
+
+    private func transferDirect(_ stream: ResolvedStream, job: DownloadJob, destination: URL, directory: URL,
+        expectedBytes: Int64?, baseBytes: Int64, combinedExpectedBytes: Int64?, context: DownloadPipelineContext) async throws -> (URL, StreamDownloadResult?) {
+        if let file = try await Aria2TransferPolicy.downloadIfSelected(stream, job: job, destination: destination,
+            expectedBytes: expectedBytes, baseBytes: baseBytes, combinedExpectedBytes: combinedExpectedBytes,
+            downloader: aria2Downloader, context: context, diagnostics: diagnostics) { return (file, nil) }
+        do {
+            let result = try await downloader.download(stream, jobID: job.id, destinationURL: destination,
+                verifiedExpectedBytes: expectedBytes) { progress in
+                Task { await context.recordTransferProgress(progress, baseBytes, combinedExpectedBytes) }
+            }
+            return (result.fileURL, result)
+        } catch {
+            guard (job.configuration.enginePreferences?.download ?? .automatic) == .automatic,
+                  Self.permitsEngineFallback(error), !Task.isCancelled else { throw error }
+            var configured = job
+            configured.configuration.sourceIdentity = .init(site:.youtube,postID:job.videoID,assetID:job.videoID,kind:.video)
+            var preferences = configured.configuration.enginePreferences ?? .init(); preferences.download = .ytDLP
+            configured.configuration.enginePreferences = preferences
+            let asset = try await runtime.externalSource(url:job.sourceURL,configuration:configured.configuration,formatID:stream.formatID)
+            guard asset.fileExtension == stream.fileExtension, asset.hasAudio == stream.hasAudio,
+                  asset.hasVideo == stream.hasVideo else { throw StreamResolutionError.invalidResponse }
+            return try await transferExternal(asset,job:configured,destination:destination,directory:directory,
+                expectedBytes:expectedBytes,baseBytes:baseBytes,combinedExpectedBytes:combinedExpectedBytes,context:context)
+        }
+    }
+
+    static func permitsEngineFallback(_ error: any Error) -> Bool {
+        guard let error = error as? StreamDownloadError else { return false }
+        switch error { case .invalidPartialContent, .rangeAssemblyFailure: return true; default: return false }
+    }
+
+    private func transferExternal(_ asset: ExternalResolvedAsset, job: DownloadJob, destination: URL, directory: URL,
+        expectedBytes: Int64?, baseBytes: Int64, combinedExpectedBytes: Int64?, context: DownloadPipelineContext) async throws -> (URL, StreamDownloadResult?) {
+        let engine = job.configuration.enginePreferences?.download ?? .automatic
+        if engine != .ytDLP && asset.requiresPython != true && ["http", "https"].contains(asset.protocolName) {
+            if let file = try await Aria2TransferPolicy.downloadIfSelected(asset.stream, job: job, destination: destination,
+                expectedBytes: expectedBytes, baseBytes: baseBytes, combinedExpectedBytes: combinedExpectedBytes,
+                downloader: aria2Downloader, context: context, diagnostics: diagnostics) { return (file, nil) }
+            do {
+                let result = try await downloader.download(asset.stream,jobID:job.id,destinationURL:destination,
+                    verifiedExpectedBytes:expectedBytes) { progress in Task { await context.recordTransferProgress(progress,baseBytes,combinedExpectedBytes) } }
+                return (result.fileURL,result)
+            } catch {
+                guard engine == .automatic, Self.permitsEngineFallback(error), !Task.isCancelled else { throw error }
+            }
+        } else if engine == .native { throw StreamResolutionError.unsupportedProtocol(asset.protocolName) }
+        try Task.checkCancellation()
+        // Reuse the coordinator's in-process source lease: Pause restarts this
+        // transfer, and execution expiry cancels it before another attempt starts.
+        let lease = try FragmentSourceLeases.shared.acquire(jobID:job.id,formatID:asset.formatID)
+        defer { FragmentSourceLeases.shared.release(lease) }
+        try await context.requireExecution(job.id)
+        var configuration = job.configuration
+        if configuration.sourceIdentity == nil { configuration.sourceIdentity = asset.identity }
+        let zero = StreamTransferProgress(jobID:job.id,streamID:asset.formatID,bytesWritten:0,totalBytesWritten:0,totalBytesExpected:expectedBytes,instantaneousBytesPerSecond:nil)
+        await context.recordTransferProgress(zero,baseBytes,combinedExpectedBytes)
+        let file = try await runtime.downloadExternal(url:job.sourceURL,configuration:configuration,formatID:asset.formatID,
+            jobID:job.id,directory:directory) { bytes,total in
+            let progress = StreamTransferProgress(jobID:job.id,streamID:asset.formatID,bytesWritten:0,totalBytesWritten:bytes,totalBytesExpected:total,instantaneousBytesPerSecond:nil)
+            Task { await context.recordTransferProgress(progress,baseBytes,combinedExpectedBytes) }
+        }
+        return (file,nil)
     }
 
     private func temporaryRoot(for jobID: UUID) -> URL {

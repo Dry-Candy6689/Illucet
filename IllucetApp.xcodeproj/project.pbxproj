@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00209EB969022CC6307295BC /* BulkImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8506183BF6517DBF77768160 /* BulkImportView.swift */; };
 		014376CB38BA48B151B90565 /* YouTubeSessionProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0720A0519CE05BB589AC25E8 /* YouTubeSessionProbe.swift */; };
 		018DF216AEBA521FB137A335 /* IllucetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB33F47BD3E45CAF8AF4C28 /* IllucetLiveActivity.swift */; };
 		019899B8BC11BD75241DC5C6 /* DownloadExperiencePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0AEC8CBC990E7D076A89F8 /* DownloadExperiencePreferences.swift */; };
 		01A2B51248605C5D04A77B7F /* RuntimeEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A689D41C966273A17816E457 /* RuntimeEnvironment.swift */; };
 		029ECB17D009F54D95B30F21 /* OutputDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7EC323F85EFEDE3D119A890 /* OutputDetailView.swift */; };
+		04901F2C8426B167CFB82D7E /* FailedLinkExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC66CA85C69E7C24B9A2DB87 /* FailedLinkExport.swift */; };
 		059906070B0C8906DAB405EE /* SharedLinkInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3F2B6AA4AB50BEFC96CC35 /* SharedLinkInbox.swift */; };
 		06482BF942B9A6B482E12F77 /* IllucetModernizationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D8A1571DE40AFF10BD5E7F /* IllucetModernizationUITests.swift */; };
 		0667F905976D2B3F3B0AA47C /* SubtitleBurnInRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9377360F596679F62BFB7CED /* SubtitleBurnInRenderer.swift */; };
@@ -24,6 +26,7 @@
 		0B42200217D3B873E03596E3 /* ShortcutHandoffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 354858572B77C4460AC86077 /* ShortcutHandoffView.swift */; };
 		0C18130073CBA56BB60DAE69 /* MediaConversionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FEAFEE12F9D51606663CB7B /* MediaConversionTests.swift */; };
 		0D1842510002E240A1169ADF /* UsabilityCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0047F61698CEBC487342CA7 /* UsabilityCleanupTests.swift */; };
+		0D2C741B595098265865E410 /* IllucetAria2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E312007B76322F7AF127757 /* IllucetAria2.xcframework */; };
 		0EA166E61C8041AAA70F38A2 /* RefinementUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8136D5475731BF0B8F4859 /* RefinementUITests.swift */; };
 		0F200700B694F6E33216A492 /* RefinementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BD41E992365786483558A6 /* RefinementTests.swift */; };
 		0F278969CF7F99E6A45DD27D /* SharingAndCreatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836ACD6B1CBE3466DFD59BBC /* SharingAndCreatorTests.swift */; };
@@ -31,6 +34,7 @@
 		1161E86D5D61B1E34615DBFF /* FirstPasteTipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398372895B0CE42DB4159162 /* FirstPasteTipView.swift */; };
 		120FB93190D08FCCA202B798 /* ShareOutcomeArbiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38462407DFD85E0ACAF55F23 /* ShareOutcomeArbiter.swift */; };
 		12D30BCEE7258C31FF73DAF1 /* DownloadConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEAE295392B657FC68061BD5 /* DownloadConfigurationView.swift */; };
+		1393F21D538DA95BE1BD6948 /* NativeAria2Downloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 533350AA44345FE98CA906BC /* NativeAria2Downloader.swift */; };
 		142B8018A27D9C083D965B0F /* SponsorBlockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24539608F29F7E3066855971 /* SponsorBlockService.swift */; };
 		18C19B64909D843E40CD4F06 /* ExtractorUpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5D91D13FB90AA184175B3D /* ExtractorUpdateServiceTests.swift */; };
 		1993D99087DFC7C0ADE1F228 /* DiagnosticStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327DB7F937192ACAC5F46DE9 /* DiagnosticStore.swift */; };
@@ -52,6 +56,8 @@
 		2311BF033B1F3EFE52E60CDA /* UserNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8400A3146C4123D6842ACCC4 /* UserNotificationService.swift */; };
 		2334EE3AB3D47EBE706DBEBC /* FragmentResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB81D0872CB4EE1532CCB32F /* FragmentResumeTests.swift */; };
 		269F8B3B025CF1A48BE7ECA3 /* IllucetUIHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17FE29EA89DD677594DA6F0C /* IllucetUIHarness.swift */; };
+		27557F4C9E134AA10EE2FDE1 /* Aria2TransferPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9922FFAD3B76C19DE7DAE2E /* Aria2TransferPolicy.swift */; };
+		285E1A5571237757964D810E /* BgUtils-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 3833CEAEE5EE0F548E7AF6F5 /* BgUtils-LICENSE.txt */; };
 		29761095C56E18FCCD0CF4E1 /* AsyncPermitPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F130C34CD9E3D0B13F59D679 /* AsyncPermitPool.swift */; };
 		2CD0B1494CA2DFF1985BFC73 /* QuickStartTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7B279C9511BE17F21BF91F /* QuickStartTests.swift */; };
 		2D8EF77CBC42B6A9D615428F /* IllucetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53BAE7139EA8114135833150 /* IllucetTheme.swift */; };
@@ -60,6 +66,7 @@
 		31ACA3ECBE8DE52850298FDD /* PlaylistBatchDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90D3F01628EF73F9E100467 /* PlaylistBatchDraft.swift */; };
 		31DC6E71839C44EDA7D99C85 /* FirstLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D1CEC0C1E978418E5842C3 /* FirstLaunchTests.swift */; };
 		31FFE2916C95BBEEE490583C /* ExtractorUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9877E9CA88C532E1502A504 /* ExtractorUpdateView.swift */; };
+		3266C6856D97433DA180160E /* BulkLinkImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A8000CCBD976A91157A4CF /* BulkLinkImport.swift */; };
 		328CFE468AD91C46A13A5EF7 /* IllucetApplicationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C89E19F3C842F81A7B105B9E /* IllucetApplicationTests.swift */; };
 		34FB8A616110E901B7C197E0 /* Python.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7B705159EC4158DF0DF0C80C /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		354F30C9546BF3175AC78E87 /* StreamDownloadContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20D8B0E312AB0C431835AE4 /* StreamDownloadContracts.swift */; };
@@ -83,6 +90,7 @@
 		43580E9124E41530DF745A81 /* SettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915061BFF500F0CAFA8C8C2B /* SettingsComponents.swift */; };
 		444979D504718F7E71F8F107 /* YTDLPExtractorEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D550CF040B36AC3FCD30D7 /* YTDLPExtractorEngine.swift */; };
 		44FF3793C302DA40168DA4BA /* QuickStartViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0BB32F488991947061C5A3E /* QuickStartViews.swift */; };
+		4536B5701FCF7E1FB19386DB /* IllucetAppModel+BulkImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8557F5ABBA750EA9240E3C4B /* IllucetAppModel+BulkImport.swift */; };
 		459FB6EE0BC412E73209FF66 /* IllucetFFmpegAudio.c in Sources */ = {isa = PBXBuildFile; fileRef = 4E3602B61802C945F1B102B4 /* IllucetFFmpegAudio.c */; };
 		476E241DA8A082DFB802561F /* FFmpegStage0ProofModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D667F47197A2C549869C07F /* FFmpegStage0ProofModels.swift */; };
 		478BE59A55FF32DED921A862 /* BatchPackageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E507692CEDA4ABA32D9F26 /* BatchPackageService.swift */; };
@@ -93,6 +101,7 @@
 		4AEE96BBCFDA3F53FDE3A5F9 /* StreamDownloadService+Range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BA5259A7521A0BE5F2136DB /* StreamDownloadService+Range.swift */; };
 		4B29468174B43A872A30A387 /* LiveActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02C05876DCFBC110496C19B4 /* LiveActivityController.swift */; };
 		4D9F8AE8442ED809D9C141A2 /* IllucetFFmpegSubtitles.c in Sources */ = {isa = PBXBuildFile; fileRef = 1FEC2FE8C376CDE8398CA716 /* IllucetFFmpegSubtitles.c */; };
+		4DBA167E51CEAB144EB1081F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EA7A70D95AE8AA991C1AD4E3 /* Security.framework */; };
 		4DFEFD1070A239FC4E2B379A /* SavedOutputAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471D956C46CC91A3CAA63D53 /* SavedOutputAccessTests.swift */; };
 		4DFFB424BFC7742C73C38455 /* DownloadPublicationWorkflow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF54893A646134368470D15 /* DownloadPublicationWorkflow.swift */; };
 		4E7FC09B6FD8874D69BC2EDE /* DownloadRestorationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE56CB02EE6AB5D5980A6EA /* DownloadRestorationController.swift */; };
@@ -112,6 +121,7 @@
 		583D825F60C87F7F8F8EE917 /* DownloadSchedulerCancellationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BBB9A29308EFDEE58F07BA3 /* DownloadSchedulerCancellationTests.swift */; };
 		59BE9C39584151CDD3007BD6 /* IllucetRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E0D9B7C5C1FFB6759AA915 /* IllucetRootView.swift */; };
 		59CAA40D77436124F5AF50B5 /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249F5DC4EEABD239944A578D /* StorageSettingsView.swift */; };
+		5A0C21DA0B1D9640AD88C879 /* RedditPageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFBFC0F2002AD6D6678A6B42 /* RedditPageLoader.swift */; };
 		5A5FD7A3D69709C8D4A4B26F /* IllucetAppModel+ExtractorUpdates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E550CE7E83AB6EA2BCC3325 /* IllucetAppModel+ExtractorUpdates.swift */; };
 		5C5AA1491A633C5ABD2A67AE /* DownloadDefaultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06CD1BD6262FBCA322E07788 /* DownloadDefaultsView.swift */; };
 		5E83F2CE2884D39FAE428CAA /* StreamRangeTransferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6B0F16DEAFD8E8B731AD82 /* StreamRangeTransferTests.swift */; };
@@ -122,6 +132,7 @@
 		63549B4AD1804399B5C7B739 /* SubtitlesOnlyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DCB6D66700EB191419FF432 /* SubtitlesOnlyTests.swift */; };
 		63AA1F721729835DDC9D6BC9 /* IllucetAppModel+LinkIntake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC505105DD7F2A12DAA7219 /* IllucetAppModel+LinkIntake.swift */; };
 		656AA3F784FFEC03BFF84328 /* SponsorBlockExecutionWorkflow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D21FE16D6ED4586A301B7114 /* SponsorBlockExecutionWorkflow.swift */; };
+		68C464C9C76726635EAEA129 /* DeveloperFixtures+MultiSite.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD9B2D2AEEB5E841C290032 /* DeveloperFixtures+MultiSite.swift */; };
 		68F379476ABD60E6EE1B2653 /* DownloadFoundationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 556732F19290FF2FB9E3B1AF /* DownloadFoundationTests.swift */; };
 		6B50E33DD48BF6F9ACE373A3 /* AccountSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83281B0D5B5EE97AC703806D /* AccountSettingsView.swift */; };
 		6E091C040FB07C2516D1B867 /* DownloadSpecialOutputPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6F2A132068950E6C0FA489A /* DownloadSpecialOutputPipeline.swift */; };
@@ -134,7 +145,9 @@
 		7118DC3C237FCA15AB5D12D5 /* ProcessingProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5720F88E62D162B53C888017 /* ProcessingProgressTests.swift */; };
 		72A5FA09C457ECD1C7D9994F /* DependencyVersions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436D1E0FD574166F56468624 /* DependencyVersions.swift */; };
 		73535A4603F06F5D13233C24 /* ExtractorPackageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50637B3A3F622ACCC8BC6C1B /* ExtractorPackageTests.swift */; };
+		738257DB9D5B085D5CBA330D /* BulkImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE4531111102B210C5F1524 /* BulkImportTests.swift */; };
 		73F4F0F819A6356DCDC301EB /* SavedOutputAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31B9A7D4FA829A22CBECE6B1 /* SavedOutputAccess.swift */; };
+		74588AA258FCC3F4945DD9E3 /* YouTubeTokenGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF310523070EC84486FB673B /* YouTubeTokenGenerator.swift */; };
 		74FA531ED3C82DD31DAB169C /* IllucetPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD3C2E2B0731D28BFC3316F5 /* IllucetPersistence.swift */; };
 		7589F33D115DC420F424C0D5 /* IllucetFFmpegSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D8815FF3C2BC2B469E49593 /* IllucetFFmpegSupport.c */; };
 		76410010C5D5CFD3B57ED1AA /* NavigationRefinementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E667776879EFACC43E7598FD /* NavigationRefinementTests.swift */; };
@@ -145,6 +158,8 @@
 		793E7580E3D1DF52819C7E76 /* CopyableVersionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F073A27B06DC73D2076146 /* CopyableVersionRow.swift */; };
 		79EC9FD806C909E42210D77D /* IllucetAppModel+DownloadConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93B923B22A9C8BE53831CF02 /* IllucetAppModel+DownloadConfiguration.swift */; };
 		7A4CF43CC527DA730905AC4E /* LinkSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC84966A200815CC7ACB225 /* LinkSettingsView.swift */; };
+		7B116283DF30882CB05F2E86 /* NativeImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F32E3CE689342A17B148972 /* NativeImageProcessor.swift */; };
+		7C15554B9326AA2F4F148470 /* Aria2DownloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FE6CE22DDB9AA01A3660EA /* Aria2DownloadTests.swift */; };
 		7CFA764B82136367716CF258 /* IllucetAppModel+QueueAndHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E16AB9EB4ED596CB1962B2 /* IllucetAppModel+QueueAndHistory.swift */; };
 		7D14533F5C0F596C557C166B /* StreamDownloadService+FragmentResume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D39FED74C3B7F30F0B238A3 /* StreamDownloadService+FragmentResume.swift */; };
 		7DDE103F2306F998935F74EC /* IllucetAppModel+Observation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB1FA878DED8BAB66AAFA5B2 /* IllucetAppModel+Observation.swift */; };
@@ -165,6 +180,7 @@
 		8C646794B9F40F4279DE6B3B /* SponsorBlockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DA43A7CB91CEBF174B75F9 /* SponsorBlockTests.swift */; };
 		8C806684297B8125FFA92A2D /* HistoryPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2765B30FEC799B6073C9C05A /* HistoryPlayback.swift */; };
 		8DF68BC000671017FB8739CC /* IllucetFFmpegStreamCopy.c in Sources */ = {isa = PBXBuildFile; fileRef = A80BDBE5E47BA96AD4CB9614 /* IllucetFFmpegStreamCopy.c */; };
+		8FB2B509279F88EFC40B2380 /* EngineSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE8D22D0836C596A0077E98 /* EngineSettingsView.swift */; };
 		90F3AC236339600D190FBE2A /* IllucetAppModel+DestinationsAndSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A720E360C8A2F421E014FD4 /* IllucetAppModel+DestinationsAndSupport.swift */; };
 		9287F5AC7218C7B3461C6DCB /* HLSPlaylistResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0EBDDADEE40CD079BD81FED /* HLSPlaylistResolverTests.swift */; };
 		939B975230355FA12B716B20 /* PlaylistAnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F2ECD7128DBFFAF65F79B1 /* PlaylistAnalysisTests.swift */; };
@@ -186,6 +202,7 @@
 		97B5FBA6B200A025F797AFC4 /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7A041DB2C7EDDCA29B6A82 /* ThumbnailService.swift */; };
 		97B6BD4556B495246583A84D /* PipUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A898A4C05557CA0A4F0CD57 /* PipUITests.swift */; };
 		97F20DA0CE0C2DB8F79CA513 /* DownloadReliabilityModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1658929F7F19C482579552B1 /* DownloadReliabilityModels.swift */; };
+		98FF54FEBB7B6CE035458D66 /* BulkImportUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2218FC05804719A1D9E5E62D /* BulkImportUITests.swift */; };
 		9A5AB8D18643425CC8E5AF6E /* DownloadPipelineRunner+Sources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3BA2D819F87A6BE2B32492 /* DownloadPipelineRunner+Sources.swift */; };
 		9A65299C817B72CF2D93E35F /* PipPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837A545214E46143ED059CCF /* PipPresentation.swift */; };
 		9A917FBF21AB71B4101A7F13 /* IllucetAES128CBC.c in Sources */ = {isa = PBXBuildFile; fileRef = 39FFD1906C59779640DF4680 /* IllucetAES128CBC.c */; };
@@ -194,8 +211,10 @@
 		9D13E74E27B4E76A7D97A386 /* DownloadConfigurationView+Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62D603F52BC2CBCB2B2C08A /* DownloadConfigurationView+Extras.swift */; };
 		9E082028012B126DA43B4B2F /* JobStatusPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5B160BAA567473BD96E215 /* JobStatusPresentation.swift */; };
 		9E0FBB07C00E28772E9F1BA8 /* DownloadPauseGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D7C8DC99F8D7A3AFA01497 /* DownloadPauseGate.swift */; };
+		9EA4CFCC95E14C828F587D60 /* ExternalMediaRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E100338D3F77E88C2EC0347 /* ExternalMediaRuntime.swift */; };
 		9EEB539C57BAD523CCAB6CDF /* IllucetAppSupportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8ABD52FAE078F0FA0700275 /* IllucetAppSupportModels.swift */; };
 		9FAFCDA467C3333D31748EE0 /* SubtitleFilenamePlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E75648151DA709F2E0D9982 /* SubtitleFilenamePlanner.swift */; };
+		A05C01C1D03204AC648B19D3 /* EmbeddedRuntimeTests+MultiSite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C441F14139BD1A77224D7E4 /* EmbeddedRuntimeTests+MultiSite.swift */; };
 		A069AC55B3EDB7615703B75D /* MediaProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A9C7FF0E92DDC69D8F9C3C /* MediaProcessor.swift */; };
 		A146F55D8F98D7EEAF9A468A /* HLSPlaylistResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A42D59D5918D56FAEE2A59C /* HLSPlaylistResolver.swift */; };
 		A1A5B453E246238E33501543 /* DownloadCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C2A374A74D937A29F9BD1E /* DownloadCoordinatorTests.swift */; };
@@ -210,6 +229,7 @@
 		A52D8550A6632180EDE4DF40 /* BatchProgressAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97E78F74E3E259420022697 /* BatchProgressAggregator.swift */; };
 		A555ED2606462EC79DB61AC4 /* LaunchConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFEBD0A24815B5A34E7551F /* LaunchConfigurationTests.swift */; };
 		A565F1ABFF1D13173586F9B3 /* ExportPublicationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54BBB5CF764709B245E688E0 /* ExportPublicationModels.swift */; };
+		A61F722BDD5F0FE6F95E5A3B /* MediaSite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F614CC5882B887043171D5D6 /* MediaSite.swift */; };
 		A66FA680AD9E9F86A4BF282C /* BatchRestoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2106EA00452BF98AE48636BA /* BatchRestoration.swift */; };
 		A6EDA3F159FD2F20AE90FF43 /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D58B7259D69D989569B2CA /* AccountStore.swift */; };
 		A73B3E4855DE503E51DA46F6 /* IllucetMedia.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE804188CA457933955FAD8C /* IllucetMedia.xcframework */; };
@@ -220,6 +240,7 @@
 		A99E3970321F727C1100A81D /* IllucetFFmpegMetadata.c in Sources */ = {isa = PBXBuildFile; fileRef = 08693EE353E62815537291D2 /* IllucetFFmpegMetadata.c */; };
 		A9DEB51B691ED5DE722D5327 /* DownloadActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F03F8BB14A343F7FD51848 /* DownloadActivityAttributes.swift */; };
 		AA9C672729F5FBA35C5E104C /* AuthorizedLiveTestConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EEDABE31B22A3A274E39C08 /* AuthorizedLiveTestConfiguration.swift */; };
+		AC19B0A6BF1E9035C7BE19FF /* IllucetAria2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 16D4FAD52B60E1B5864279E0 /* IllucetAria2.cpp */; };
 		ACA156A40ED34B0647C63E91 /* SponsorBlockCategoryLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DD82C97D749EC932F3A3A1 /* SponsorBlockCategoryLabel.swift */; };
 		AD4733DE7816AFB6C2576FB1 /* EmbeddedRuntimeTests+ExtractorUpdates.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72A5D271DA98FAF2658D760 /* EmbeddedRuntimeTests+ExtractorUpdates.swift */; };
 		AE2DCCCBA835FA751D2096C3 /* PhysicalRefinementUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48EC91E4AE88E8EF4F2786D /* PhysicalRefinementUITests.swift */; };
@@ -228,6 +249,7 @@
 		AF6297B269F6DF03C2A92BE5 /* AutomaticExtractorUpdatePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB90762D8428249BA221E3D6 /* AutomaticExtractorUpdatePolicy.swift */; };
 		B0287C677699C85AA1295DC9 /* MediaAvailabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92DDC2F95A08DDFCEF5344EA /* MediaAvailabilityTests.swift */; };
 		B0E838C728B42D5A3600F271 /* HLSPlaylistHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFB77EBB4A5AF9626D1AE4A /* HLSPlaylistHTTPClient.swift */; };
+		B30549C8946F6B740B051158 /* MediaSite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F614CC5882B887043171D5D6 /* MediaSite.swift */; };
 		B3094FDD3A367B112EB9DEE2 /* PlaylistBatchControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9E2888DA32337A0AC98009 /* PlaylistBatchControllerTests.swift */; };
 		B439ECBF39332C165638D820 /* StreamDownloadService+HLS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5373DA97A1B17F1AA1CEABCB /* StreamDownloadService+HLS.swift */; };
 		B52BB0FBCFF2D527EDDE4064 /* DownloadConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32692A57BA2F24F887ABC1F /* DownloadConfirmationView.swift */; };
@@ -244,6 +266,7 @@
 		BE53F23C05C6CA56EEAEC485 /* ShortcutDownloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C07814929908B1FF06420A /* ShortcutDownloadTests.swift */; };
 		BE9A2B3776F4B3D38708D84E /* DownloadActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F03F8BB14A343F7FD51848 /* DownloadActivityAttributes.swift */; };
 		BEA4A92CFCFC869AA17D12FE /* QuickStart.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF57ECED6FA8330E17785DF0 /* QuickStart.swift */; };
+		BEC8690B4DEEC33CFB79AF32 /* illucet-token.js in Resources */ = {isa = PBXBuildFile; fileRef = 4CE0D65654400628BC3635CB /* illucet-token.js */; };
 		BEEF944A7CF9517EC3D3280C /* FormatSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE84AC60EDB9794679214FB /* FormatSelection.swift */; };
 		C05BE3104C4CD0AA091D3A49 /* ExtractorUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7CD0B60ADEE6707A6D2E44 /* ExtractorUpdateService.swift */; };
 		C16B785E796B862C2A6FB1E1 /* DownloadRetryPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEB02272DA198D2C963537F /* DownloadRetryPolicy.swift */; };
@@ -252,6 +275,7 @@
 		C3B882ACBC948150ABF6CD5D /* LiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 356754AAF1AD4448F8094B5A /* LiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C7473A994AF08E90DCD63B26 /* YouTubeSessionProbeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05189A3D4172E7316A31A333 /* YouTubeSessionProbeUITests.swift */; };
 		C77A1983AE86B4727EA7D8A2 /* SharedLinkChoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7439536CE9351279DA5CE990 /* SharedLinkChoiceView.swift */; };
+		C78C54032B39340386FE966A /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CE68909C4908ADED0A45740 /* libiconv.tbd */; };
 		C7DF34E33A0E5726DFAA5D6D /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890F8466E10673000ED1A02B /* DiagnosticsView.swift */; };
 		C879858D674BE3D31EB592CA /* PythonEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4F08FB7CF2CB2DC59FDA83A /* PythonEngine.swift */; };
 		C8D8C6AEF1904A7FFD4D6F9E /* ContinuedProcessingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E0F4BA3B3D3FB29BBF15DF /* ContinuedProcessingController.swift */; };
@@ -278,12 +302,14 @@
 		E08E5F42F503CC87509DBCAE /* SubtitleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D5C785AB8894CD1714C157 /* SubtitleModels.swift */; };
 		E0922ED557A1A1C29E8965F0 /* WebVTTProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B9E07B17DB4FD1CFB6427B /* WebVTTProcessor.swift */; };
 		E14950BF16AF549DB1C2DD05 /* ConversionCapabilityMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6692E9B72481B7984D6C6551 /* ConversionCapabilityMatrix.swift */; };
+		E2BF8B2A4978E4D530EA62FA /* IllucetWebKitBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 393CA6B23C534398CD801EFA /* IllucetWebKitBridge.m */; };
 		E3D880ABF01E72BCFE475DDE /* BackgroundFileProtection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF71145B30711DAA5E231EDB /* BackgroundFileProtection.swift */; };
 		E553947A4B8CD25C4274D53C /* SubtitleBurnInWorkflow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14627F853474CCC9D5FFC30 /* SubtitleBurnInWorkflow.swift */; };
 		E639E1AE683330C1B4CB4CB7 /* IllucetFFmpegChapters.c in Sources */ = {isa = PBXBuildFile; fileRef = 6D17C827AC3C55552D0585FA /* IllucetFFmpegChapters.c */; };
 		E7A4845B3F2187A5BD629EE0 /* Stage0ProofModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896ABB1C3B92F44C3F02945D /* Stage0ProofModels.swift */; };
 		E9BCCC1A79D540CFC718E6F0 /* DownloadRetryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5747209582BCC1C6878AFB /* DownloadRetryController.swift */; };
 		E9DEC74FCFB70EE9456191B3 /* PipCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EA02F527B538D18F2F2097 /* PipCoordinator.swift */; };
+		EAA113E1FA9AC79E33A945A0 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51F2CEFBA23DC89C130D307B /* WebKit.framework */; };
 		EAC552759EB34DD606BDAF1C /* IllucetFFmpegProbe.c in Sources */ = {isa = PBXBuildFile; fileRef = 9E1A335A005415A552934DA1 /* IllucetFFmpegProbe.c */; };
 		EBC985EC44EC68190032358F /* IllucetPythonBridge.c in Sources */ = {isa = PBXBuildFile; fileRef = 117FCF65E295AB84EF5F0DA8 /* IllucetPythonBridge.c */; };
 		EC93E6D36BF6CD345F6E4CB7 /* HLSLocalStreamAssemblyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E4CA47E268CCEEFA8D4787 /* HLSLocalStreamAssemblyTests.swift */; };
@@ -292,6 +318,7 @@
 		EECAE1BFFF3834F6A05D4E38 /* BackgroundTransferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0B94BE8C92AF3359C4AEF7 /* BackgroundTransferTests.swift */; };
 		F19D61CE6F8A6AD666EBCC88 /* PlaylistAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7B74D30F0913B3EA4FCF55 /* PlaylistAnalyzer.swift */; };
 		F1BFC4132E187E565E58336F /* BackgroundExecutionPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B97AB42DC469F3C0273173EE /* BackgroundExecutionPersistenceTests.swift */; };
+		F20D1695EADF96397A5BDF3C /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A2F1C64D464FFA6DD720EA9 /* libc++.tbd */; };
 		F23FFF2D9A63F3EDE53B91B2 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ADAFE6BC2D0B8E39D20768A7 /* VideoToolbox.framework */; };
 		F290024465058DCF7ADC3DD6 /* PlaylistModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA99721A7083E24271A9C8A0 /* PlaylistModels.swift */; };
 		F35D726E458F66B9ABD48EF0 /* NativeFFmpegMediaProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45939083367072C154D72BE5 /* NativeFFmpegMediaProcessor.swift */; };
@@ -373,6 +400,7 @@
 		0720A0519CE05BB589AC25E8 /* YouTubeSessionProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSessionProbe.swift; sourceTree = "<group>"; };
 		08693EE353E62815537291D2 /* IllucetFFmpegMetadata.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetFFmpegMetadata.c; sourceTree = "<group>"; };
 		09DB04345B4D41337DDC4423 /* BackgroundDownloadUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundDownloadUITests.swift; sourceTree = "<group>"; };
+		0A2F1C64D464FFA6DD720EA9 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		0A898A4C05557CA0A4F0CD57 /* PipUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipUITests.swift; sourceTree = "<group>"; };
 		0AADEFD2A0EDB7C1B6A711F9 /* PlaylistSelectionAndArchiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistSelectionAndArchiveTests.swift; sourceTree = "<group>"; };
 		0B3BA2D819F87A6BE2B32492 /* DownloadPipelineRunner+Sources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DownloadPipelineRunner+Sources.swift"; sourceTree = "<group>"; };
@@ -391,6 +419,7 @@
 		146DCCE512EBB4A4E0FAE207 /* DownloadPipelineRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadPipelineRunner.swift; sourceTree = "<group>"; };
 		153DAC9E51D7BCEC3DC34C74 /* IllucetStartupRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllucetStartupRecoveryTests.swift; sourceTree = "<group>"; };
 		1658929F7F19C482579552B1 /* DownloadReliabilityModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadReliabilityModels.swift; sourceTree = "<group>"; };
+		16D4FAD52B60E1B5864279E0 /* IllucetAria2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = IllucetAria2.cpp; sourceTree = "<group>"; };
 		17FE29EA89DD677594DA6F0C /* IllucetUIHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllucetUIHarness.swift; sourceTree = "<group>"; };
 		1A0B94BE8C92AF3359C4AEF7 /* BackgroundTransferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTransferTests.swift; sourceTree = "<group>"; };
 		1A169AAF35336281660A5C57 /* ExtractorPackageCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractorPackageCatalog.swift; sourceTree = "<group>"; };
@@ -398,7 +427,9 @@
 		1C3F2B6AA4AB50BEFC96CC35 /* SharedLinkInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedLinkInbox.swift; sourceTree = "<group>"; };
 		1C4AD8C2DD55C5CF6B12B7B2 /* HLSResourceTransferLifecycleRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSResourceTransferLifecycleRegistry.swift; sourceTree = "<group>"; };
 		1CCF2AC89FA8D06B3E5825CF /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
+		1D78AA0CD2C3C8E063E5957C /* IllucetAria2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IllucetAria2.h; sourceTree = "<group>"; };
 		1DE4A41013E18D2B37CA3A3C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		1E100338D3F77E88C2EC0347 /* ExternalMediaRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMediaRuntime.swift; sourceTree = "<group>"; };
 		1E1905FAA92BA348FBB6C531 /* ConversionMetadataPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionMetadataPolicy.swift; sourceTree = "<group>"; };
 		1E6B0F16DEAFD8E8B731AD82 /* StreamRangeTransferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamRangeTransferTests.swift; sourceTree = "<group>"; };
 		1E75648151DA709F2E0D9982 /* SubtitleFilenamePlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleFilenamePlanner.swift; sourceTree = "<group>"; };
@@ -408,6 +439,7 @@
 		2066E83CCBB32BF4571920D5 /* FFmpeg.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FFmpeg.modulemap; sourceTree = "<group>"; };
 		2106EA00452BF98AE48636BA /* BatchRestoration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchRestoration.swift; sourceTree = "<group>"; };
 		21E0D9B7C5C1FFB6759AA915 /* IllucetRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllucetRootView.swift; sourceTree = "<group>"; };
+		2218FC05804719A1D9E5E62D /* BulkImportUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkImportUITests.swift; sourceTree = "<group>"; };
 		22AAC367EEB02F7A135874C1 /* IllucetFFmpegProof.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetFFmpegProof.c; sourceTree = "<group>"; };
 		235DCEC6FC164FD119EFD7D8 /* BatchQueueOrdering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchQueueOrdering.swift; sourceTree = "<group>"; };
 		240E193ED846379A980CEC09 /* StreamRangeTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamRangeTransfer.swift; sourceTree = "<group>"; };
@@ -430,6 +462,7 @@
 		2CCD29C61D7B8E272740ADF1 /* Stage0ProofRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage0ProofRunner.swift; sourceTree = "<group>"; };
 		2DE84AC60EDB9794679214FB /* FormatSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatSelection.swift; sourceTree = "<group>"; };
 		2E5126061F97FCD840537034 /* IllucetFloatingTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllucetFloatingTabBar.swift; sourceTree = "<group>"; };
+		2EE8D22D0836C596A0077E98 /* EngineSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineSettingsView.swift; sourceTree = "<group>"; };
 		2F5747209582BCC1C6878AFB /* DownloadRetryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadRetryController.swift; sourceTree = "<group>"; };
 		30496B0B53F6B8D5B0009DED /* SavedOutputShareButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedOutputShareButton.swift; sourceTree = "<group>"; };
 		304A475A42F789216A9D1236 /* StreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamResolver.swift; sourceTree = "<group>"; };
@@ -446,18 +479,22 @@
 		36EE3FCEA27D9A44668C2432 /* PlaylistChildJobFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistChildJobFactory.swift; sourceTree = "<group>"; };
 		372B7161A9F5A4A01A2B641B /* LiveActivityUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityUITests.swift; sourceTree = "<group>"; };
 		3736F8A9EC93FA2FC8CBDA44 /* OpenSharedLinkIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSharedLinkIntent.swift; sourceTree = "<group>"; };
+		3833CEAEE5EE0F548E7AF6F5 /* BgUtils-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BgUtils-LICENSE.txt"; sourceTree = "<group>"; };
 		38462407DFD85E0ACAF55F23 /* ShareOutcomeArbiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareOutcomeArbiter.swift; sourceTree = "<group>"; };
+		393CA6B23C534398CD801EFA /* IllucetWebKitBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IllucetWebKitBridge.m; sourceTree = "<group>"; };
 		398372895B0CE42DB4159162 /* FirstPasteTipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstPasteTipView.swift; sourceTree = "<group>"; };
 		39FFD1906C59779640DF4680 /* IllucetAES128CBC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetAES128CBC.c; sourceTree = "<group>"; };
 		3C7357DD3F3702465B432EE1 /* CookieFileImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CookieFileImport.swift; sourceTree = "<group>"; };
 		3DB88D020ED323C1FF6F1021 /* IllucetAppModel+Shortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IllucetAppModel+Shortcuts.swift"; sourceTree = "<group>"; };
 		3EAF0A17C5211FAB1B47A4F9 /* ExtractorEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractorEngine.swift; sourceTree = "<group>"; };
 		3F0ED37DA561DA233AC844F7 /* OutputPlanningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputPlanningTests.swift; sourceTree = "<group>"; };
+		3F32E3CE689342A17B148972 /* NativeImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeImageProcessor.swift; sourceTree = "<group>"; };
 		3F7B279C9511BE17F21BF91F /* QuickStartTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickStartTests.swift; sourceTree = "<group>"; };
 		3FC1737B1EBD1E0FBB81B9FB /* SharingAndCreatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharingAndCreatorUITests.swift; sourceTree = "<group>"; };
 		3FEABC84FB281406B84F84C3 /* Stage0HarnessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage0HarnessView.swift; sourceTree = "<group>"; };
 		4164B93EE807D7672F71713A /* IllucetFFmpegBridge.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetFFmpegBridge.c; sourceTree = "<group>"; };
 		436D1E0FD574166F56468624 /* DependencyVersions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyVersions.swift; sourceTree = "<group>"; };
+		43A8000CCBD976A91157A4CF /* BulkLinkImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkLinkImport.swift; sourceTree = "<group>"; };
 		43F03F8BB14A343F7FD51848 /* DownloadActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadActivityAttributes.swift; sourceTree = "<group>"; };
 		44D7C8DC99F8D7A3AFA01497 /* DownloadPauseGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadPauseGate.swift; sourceTree = "<group>"; };
 		45939083367072C154D72BE5 /* NativeFFmpegMediaProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeFFmpegMediaProcessor.swift; sourceTree = "<group>"; };
@@ -470,13 +507,17 @@
 		49665645E0ABFAE1C347C650 /* DownloadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadView.swift; sourceTree = "<group>"; };
 		4AF40A1B26FA551B99D3858C /* Download with Illucet.shortcut */ = {isa = PBXFileReference; path = "Download with Illucet.shortcut"; sourceTree = "<group>"; };
 		4B7CD0B60ADEE6707A6D2E44 /* ExtractorUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractorUpdateService.swift; sourceTree = "<group>"; };
+		4C441F14139BD1A77224D7E4 /* EmbeddedRuntimeTests+MultiSite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EmbeddedRuntimeTests+MultiSite.swift"; sourceTree = "<group>"; };
+		4CE0D65654400628BC3635CB /* illucet-token.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "illucet-token.js"; sourceTree = "<group>"; };
 		4D8815FF3C2BC2B469E49593 /* IllucetFFmpegSupport.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetFFmpegSupport.c; sourceTree = "<group>"; };
 		4E3602B61802C945F1B102B4 /* IllucetFFmpegAudio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetFFmpegAudio.c; sourceTree = "<group>"; };
 		4E550CE7E83AB6EA2BCC3325 /* IllucetAppModel+ExtractorUpdates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IllucetAppModel+ExtractorUpdates.swift"; sourceTree = "<group>"; };
 		4E756D3AE6274CF45B5B6D0C /* IllucetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllucetApp.swift; sourceTree = "<group>"; };
 		50637B3A3F622ACCC8BC6C1B /* ExtractorPackageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractorPackageTests.swift; sourceTree = "<group>"; };
 		51A7ABA4AF5714051D1DEF50 /* StreamTransferLifecycleRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamTransferLifecycleRegistry.swift; sourceTree = "<group>"; };
+		51F2CEFBA23DC89C130D307B /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		52512E8909318CA6F2A920F0 /* AccountStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStoreTests.swift; sourceTree = "<group>"; };
+		533350AA44345FE98CA906BC /* NativeAria2Downloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeAria2Downloader.swift; sourceTree = "<group>"; };
 		5373DA97A1B17F1AA1CEABCB /* StreamDownloadService+HLS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamDownloadService+HLS.swift"; sourceTree = "<group>"; };
 		53A82C5EFEC49C039EBB033F /* IllucetQuickJSBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IllucetQuickJSBridge.h; sourceTree = "<group>"; };
 		53BAE7139EA8114135833150 /* IllucetTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllucetTheme.swift; sourceTree = "<group>"; };
@@ -493,6 +534,7 @@
 		5BBC3F9883FE406CB426964B /* IllucetAppPersistenceProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllucetAppPersistenceProjection.swift; sourceTree = "<group>"; };
 		5C5EB301CC804918B5A6DA40 /* HistoryFileRemoval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryFileRemoval.swift; sourceTree = "<group>"; };
 		5D8414C5E9A718FD945C8C9E /* IllucetFFmpegBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IllucetFFmpegBridge.h; sourceTree = "<group>"; };
+		5E312007B76322F7AF127757 /* IllucetAria2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = IllucetAria2.xcframework; path = Vendor/Frameworks/IllucetAria2.xcframework; sourceTree = "<group>"; };
 		60D550CF040B36AC3FCD30D7 /* YTDLPExtractorEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YTDLPExtractorEngine.swift; sourceTree = "<group>"; };
 		60D8A1571DE40AFF10BD5E7F /* IllucetModernizationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllucetModernizationUITests.swift; sourceTree = "<group>"; };
 		612490C46FD89BFB1BF3FCE9 /* PythonBridgeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonBridgeEvent.swift; sourceTree = "<group>"; };
@@ -515,6 +557,7 @@
 		6D17C827AC3C55552D0585FA /* IllucetFFmpegChapters.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetFFmpegChapters.c; sourceTree = "<group>"; };
 		6E743DC75A64285964AF292F /* IllucetFFmpegArtwork.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetFFmpegArtwork.c; sourceTree = "<group>"; };
 		6ECFDD3256C7CA8BE3E53B1A /* IllucetHostResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IllucetHostResolver.h; sourceTree = "<group>"; };
+		6FDD8171F043814894F69223 /* IllucetWebKitBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IllucetWebKitBridge.h; sourceTree = "<group>"; };
 		733EDECD1B49AA23CDE3CDEC /* TabRootScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabRootScroll.swift; sourceTree = "<group>"; };
 		734134D127041704D8A212BD /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		7439536CE9351279DA5CE990 /* SharedLinkChoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedLinkChoiceView.swift; sourceTree = "<group>"; };
@@ -537,11 +580,14 @@
 		837A545214E46143ED059CCF /* PipPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipPresentation.swift; sourceTree = "<group>"; };
 		8400A3146C4123D6842ACCC4 /* UserNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNotificationService.swift; sourceTree = "<group>"; };
 		84E4CA47E268CCEEFA8D4787 /* HLSLocalStreamAssemblyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSLocalStreamAssemblyTests.swift; sourceTree = "<group>"; };
+		8506183BF6517DBF77768160 /* BulkImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkImportView.swift; sourceTree = "<group>"; };
+		8557F5ABBA750EA9240E3C4B /* IllucetAppModel+BulkImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IllucetAppModel+BulkImport.swift"; sourceTree = "<group>"; };
 		85745B72FC1E094022697C67 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		890F8466E10673000ED1A02B /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
 		896ABB1C3B92F44C3F02945D /* Stage0ProofModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage0ProofModels.swift; sourceTree = "<group>"; };
 		8B19500419B1FD79A1C65112 /* SecureSubtitleTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureSubtitleTransport.swift; sourceTree = "<group>"; };
 		8BC505105DD7F2A12DAA7219 /* IllucetAppModel+LinkIntake.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IllucetAppModel+LinkIntake.swift"; sourceTree = "<group>"; };
+		8CE4531111102B210C5F1524 /* BulkImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkImportTests.swift; sourceTree = "<group>"; };
 		8D39FED74C3B7F30F0B238A3 /* StreamDownloadService+FragmentResume.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamDownloadService+FragmentResume.swift"; sourceTree = "<group>"; };
 		8D667F47197A2C549869C07F /* FFmpegStage0ProofModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFmpegStage0ProofModels.swift; sourceTree = "<group>"; };
 		8D86DD01E5F80EDD5D95B4EC /* ChapterWorkflow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterWorkflow.swift; sourceTree = "<group>"; };
@@ -561,6 +607,7 @@
 		9A720E360C8A2F421E014FD4 /* IllucetAppModel+DestinationsAndSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IllucetAppModel+DestinationsAndSupport.swift"; sourceTree = "<group>"; };
 		9ACAC1E40F733E74F0C5F026 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		9CE56CB02EE6AB5D5980A6EA /* DownloadRestorationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadRestorationController.swift; sourceTree = "<group>"; };
+		9CE68909C4908ADED0A45740 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		9CE7E7791D2C3C272E2E3C87 /* OutputConversionPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputConversionPlanner.swift; sourceTree = "<group>"; };
 		9CEB02272DA198D2C963537F /* DownloadRetryPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadRetryPolicy.swift; sourceTree = "<group>"; };
 		9E1A335A005415A552934DA1 /* IllucetFFmpegProbe.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IllucetFFmpegProbe.c; sourceTree = "<group>"; };
@@ -600,6 +647,7 @@
 		BE5D91D13FB90AA184175B3D /* ExtractorUpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractorUpdateServiceTests.swift; sourceTree = "<group>"; };
 		BE7B74D30F0913B3EA4FCF55 /* PlaylistAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistAnalyzer.swift; sourceTree = "<group>"; };
 		BF1ABD120208B13828244BB1 /* PlaylistBatchFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistBatchFlowView.swift; sourceTree = "<group>"; };
+		BF310523070EC84486FB673B /* YouTubeTokenGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeTokenGenerator.swift; sourceTree = "<group>"; };
 		BFFB77EBB4A5AF9626D1AE4A /* HLSPlaylistHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSPlaylistHTTPClient.swift; sourceTree = "<group>"; };
 		C0444DAC8C5759C2103A3ED6 /* SubtitlePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitlePickerView.swift; sourceTree = "<group>"; };
 		C0F333BD66B1FEC68E71692D /* RetainedMediaReprocessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetainedMediaReprocessView.swift; sourceTree = "<group>"; };
@@ -623,6 +671,7 @@
 		CFB3AC2DEA5B2CD17383736B /* NativeBridgeCharacterizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBridgeCharacterizationTests.swift; sourceTree = "<group>"; };
 		D0176F3244DBFE05971EA54B /* DeveloperFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperFixtures.swift; sourceTree = "<group>"; };
 		D21FE16D6ED4586A301B7114 /* SponsorBlockExecutionWorkflow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SponsorBlockExecutionWorkflow.swift; sourceTree = "<group>"; };
+		D2FE6CE22DDB9AA01A3660EA /* Aria2DownloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Aria2DownloadTests.swift; sourceTree = "<group>"; };
 		D3BD41E992365786483558A6 /* RefinementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefinementTests.swift; sourceTree = "<group>"; };
 		D46CBEAD71AC0FB394E1FB50 /* IllucetAppModel+InlineSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IllucetAppModel+InlineSelection.swift"; sourceTree = "<group>"; };
 		D48EC91E4AE88E8EF4F2786D /* PhysicalRefinementUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalRefinementUITests.swift; sourceTree = "<group>"; };
@@ -652,15 +701,19 @@
 		E74074C651EC4F753E85837B /* NavigationRefinementUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationRefinementUITests.swift; sourceTree = "<group>"; };
 		E86D593DA49B22BC588FC176 /* AccountSettingsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsUITests.swift; sourceTree = "<group>"; };
 		E9C628A81CA87B356C80F538 /* DownloadAdmissionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadAdmissionTests.swift; sourceTree = "<group>"; };
+		EA7A70D95AE8AA991C1AD4E3 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		EA89BCA3FA5284E32C7043C6 /* SubtitleSidecarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleSidecarTests.swift; sourceTree = "<group>"; };
 		EA94E76BA3D4DE74CB0EA783 /* HLSPlaylistParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSPlaylistParser.swift; sourceTree = "<group>"; };
 		EB1FA878DED8BAB66AAFA5B2 /* IllucetAppModel+Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IllucetAppModel+Observation.swift"; sourceTree = "<group>"; };
 		EB8136D5475731BF0B8F4859 /* RefinementUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefinementUITests.swift; sourceTree = "<group>"; };
 		EBB59479F65DB6317232B914 /* PreferencesBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesBackup.swift; sourceTree = "<group>"; };
+		EC66CA85C69E7C24B9A2DB87 /* FailedLinkExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailedLinkExport.swift; sourceTree = "<group>"; };
+		ECD9B2D2AEEB5E841C290032 /* DeveloperFixtures+MultiSite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DeveloperFixtures+MultiSite.swift"; sourceTree = "<group>"; };
 		ED52A0FDDC04672589704656 /* TransferAdmissionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferAdmissionPolicy.swift; sourceTree = "<group>"; };
 		EE804188CA457933955FAD8C /* IllucetMedia.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = IllucetMedia.xcframework; path = Vendor/Frameworks/IllucetMedia.xcframework; sourceTree = "<group>"; };
 		EEAE295392B657FC68061BD5 /* DownloadConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadConfigurationView.swift; sourceTree = "<group>"; };
 		EF3FE6BCE30FBA0B3A8F366E /* SponsorBlockExecutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SponsorBlockExecutionTests.swift; sourceTree = "<group>"; };
+		EFBFC0F2002AD6D6678A6B42 /* RedditPageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedditPageLoader.swift; sourceTree = "<group>"; };
 		F0047F61698CEBC487342CA7 /* UsabilityCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsabilityCleanupTests.swift; sourceTree = "<group>"; };
 		F0AB3E60949BE0F71CBDE961 /* MetadataSidecarWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataSidecarWriter.swift; sourceTree = "<group>"; };
 		F0BB32F488991947061C5A3E /* QuickStartViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickStartViews.swift; sourceTree = "<group>"; };
@@ -668,10 +721,12 @@
 		F130C34CD9E3D0B13F59D679 /* AsyncPermitPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncPermitPool.swift; sourceTree = "<group>"; };
 		F4A9C7FF0E92DDC69D8F9C3C /* MediaProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaProcessor.swift; sourceTree = "<group>"; };
 		F4F08FB7CF2CB2DC59FDA83A /* PythonEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonEngine.swift; sourceTree = "<group>"; };
+		F614CC5882B887043171D5D6 /* MediaSite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSite.swift; sourceTree = "<group>"; };
 		F635688D77A20A07D4D4EEA8 /* DownloadExperienceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadExperienceSettingsView.swift; sourceTree = "<group>"; };
 		F6C1043EAA9748E2DFAF4E3F /* DownloadNetworkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadNetworkController.swift; sourceTree = "<group>"; };
 		F7DBD7236BB9C01A22AFA9C0 /* LinkIntakePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkIntakePolicy.swift; sourceTree = "<group>"; };
 		F7EC323F85EFEDE3D119A890 /* OutputDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputDetailView.swift; sourceTree = "<group>"; };
+		F9922FFAD3B76C19DE7DAE2E /* Aria2TransferPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Aria2TransferPolicy.swift; sourceTree = "<group>"; };
 		F9F2ECD7128DBFFAF65F79B1 /* PlaylistAnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistAnalysisTests.swift; sourceTree = "<group>"; };
 		FAA96B1EE6B3648733407B3E /* BrandedText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandedText.swift; sourceTree = "<group>"; };
 		FB634E6A359BB651C41C0AD6 /* IllucetTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = IllucetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -687,11 +742,16 @@
 				213D95A4F40803124D1B913F /* Python.xcframework in Frameworks */,
 				77932640C7812F88B3164B1D /* QuickJS.xcframework in Frameworks */,
 				A73B3E4855DE503E51DA46F6 /* IllucetMedia.xcframework in Frameworks */,
+				0D2C741B595098265865E410 /* IllucetAria2.xcframework in Frameworks */,
+				4DBA167E51CEAB144EB1081F /* Security.framework in Frameworks */,
+				C78C54032B39340386FE966A /* libiconv.tbd in Frameworks */,
+				F20D1695EADF96397A5BDF3C /* libc++.tbd in Frameworks */,
 				4FB48C77D0E02F45D268AD4C /* AudioToolbox.framework in Frameworks */,
 				F23FFF2D9A63F3EDE53B91B2 /* VideoToolbox.framework in Frameworks */,
 				3EC0FB8E038C20B615DD8BE3 /* CoreFoundation.framework in Frameworks */,
 				1A2F73C0E3E3D95F0C518787 /* CoreMedia.framework in Frameworks */,
 				A4AA025F13D603C2491DADC4 /* CoreVideo.framework in Frameworks */,
+				EAA113E1FA9AC79E33A945A0 /* WebKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -712,6 +772,7 @@
 		0D51959EE07A2C1DD6C20657 /* Download */ = {
 			isa = PBXGroup;
 			children = (
+				8506183BF6517DBF77768160 /* BulkImportView.swift */,
 				EEAE295392B657FC68061BD5 /* DownloadConfigurationView.swift */,
 				D62D603F52BC2CBCB2B2C08A /* DownloadConfigurationView+Extras.swift */,
 				4834D8CDD339477B9A5A39F4 /* DownloadConfigurationView+MediaOptions.swift */,
@@ -809,6 +870,10 @@
 			children = (
 				63AAB6A0B53B8567D91F339A /* IllucetQuickJSBridge.c */,
 				53A82C5EFEC49C039EBB033F /* IllucetQuickJSBridge.h */,
+				6FDD8171F043814894F69223 /* IllucetWebKitBridge.h */,
+				393CA6B23C534398CD801EFA /* IllucetWebKitBridge.m */,
+				EFBFC0F2002AD6D6678A6B42 /* RedditPageLoader.swift */,
+				BF310523070EC84486FB673B /* YouTubeTokenGenerator.swift */,
 			);
 			path = JavaScriptBridge;
 			sourceTree = "<group>";
@@ -816,9 +881,11 @@
 		53539DDBBBE89B8D5DB7A498 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				43A8000CCBD976A91157A4CF /* BulkLinkImport.swift */,
 				B5C58754C4D2DBC1C98FB74C /* CollectionFilter.swift */,
 				436D1E0FD574166F56468624 /* DependencyVersions.swift */,
 				8E0AEC8CBC990E7D076A89F8 /* DownloadExperiencePreferences.swift */,
+				EC66CA85C69E7C24B9A2DB87 /* FailedLinkExport.swift */,
 				DA040419B34E0869AEDAC72A /* FirstRunState.swift */,
 				2DE84AC60EDB9794679214FB /* FormatSelection.swift */,
 				275F95997CD3E19333600C96 /* IllucetModels.swift */,
@@ -904,6 +971,16 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
+		817B30475ADAB55F2B36FA7F /* Aria2Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				16D4FAD52B60E1B5864279E0 /* IllucetAria2.cpp */,
+				1D78AA0CD2C3C8E063E5957C /* IllucetAria2.h */,
+				533350AA44345FE98CA906BC /* NativeAria2Downloader.swift */,
+			);
+			path = Aria2Bridge;
+			sourceTree = "<group>";
+		};
 		862B9F4396E89F54BB13F6F8 /* MediaProcessing */ = {
 			isa = PBXGroup;
 			children = (
@@ -915,6 +992,7 @@
 				C7457E1142990C42C6410B9C /* MediaConversionRequestBuilder.swift */,
 				F4A9C7FF0E92DDC69D8F9C3C /* MediaProcessor.swift */,
 				45939083367072C154D72BE5 /* NativeFFmpegMediaProcessor.swift */,
+				3F32E3CE689342A17B148972 /* NativeImageProcessor.swift */,
 				A4A263EBB1E9FF285E64409D /* RetainedMediaReprocessor.swift */,
 				9377360F596679F62BFB7CED /* SubtitleBurnInRenderer.swift */,
 			);
@@ -954,6 +1032,7 @@
 			children = (
 				E86D593DA49B22BC588FC176 /* AccountSettingsUITests.swift */,
 				09DB04345B4D41337DDC4423 /* BackgroundDownloadUITests.swift */,
+				2218FC05804719A1D9E5E62D /* BulkImportUITests.swift */,
 				60D8A1571DE40AFF10BD5E7F /* IllucetModernizationUITests.swift */,
 				17FE29EA89DD677594DA6F0C /* IllucetUIHarness.swift */,
 				AE50FCB158824D04B6B53889 /* IllucetUITests.swift */,
@@ -986,15 +1065,26 @@
 			isa = PBXGroup;
 			children = (
 				43F03F8BB14A343F7FD51848 /* DownloadActivityAttributes.swift */,
+				F614CC5882B887043171D5D6 /* MediaSite.swift */,
 				1C3F2B6AA4AB50BEFC96CC35 /* SharedLinkInbox.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		A76A45D169CFC8AE595488EB /* TokenResources */ = {
+			isa = PBXGroup;
+			children = (
+				3833CEAEE5EE0F548E7AF6F5 /* BgUtils-LICENSE.txt */,
+				4CE0D65654400628BC3635CB /* illucet-token.js */,
+			);
+			path = TokenResources;
 			sourceTree = "<group>";
 		};
 		A977C0384192FA174F148835 /* Native */ = {
 			isa = PBXGroup;
 			children = (
 				EA7D440D82271E7DE8F4411E /* Accounts */,
+				817B30475ADAB55F2B36FA7F /* Aria2Bridge */,
 				B921BDD40257A962F71D0656 /* CryptoBridge */,
 				E122A43D6F83A5E5FF2CDA1F /* FFmpegBridge */,
 				4F91EECBF968FEF093620832 /* JavaScriptBridge */,
@@ -1036,6 +1126,7 @@
 				0ED2580640E3FE8440CA73A8 /* Components */,
 				585960951AAC10B05E763253 /* Design */,
 				7299690587BA9A0D46A0950A /* Features */,
+				A76A45D169CFC8AE595488EB /* TokenResources */,
 			);
 			path = IllucetApp;
 			sourceTree = "<group>";
@@ -1083,6 +1174,7 @@
 				890F8466E10673000ED1A02B /* DiagnosticsView.swift */,
 				06CD1BD6262FBCA322E07788 /* DownloadDefaultsView.swift */,
 				F635688D77A20A07D4D4EEA8 /* DownloadExperienceSettingsView.swift */,
+				2EE8D22D0836C596A0077E98 /* EngineSettingsView.swift */,
 				A9877E9CA88C532E1502A504 /* ExtractorUpdateView.swift */,
 				B5E93AD24A46E6E37E9E3984 /* LicensesView.swift */,
 				DAC84966A200815CC7ACB225 /* LinkSettingsView.swift */,
@@ -1099,9 +1191,11 @@
 			isa = PBXGroup;
 			children = (
 				52512E8909318CA6F2A920F0 /* AccountStoreTests.swift */,
+				D2FE6CE22DDB9AA01A3660EA /* Aria2DownloadTests.swift */,
 				B97AB42DC469F3C0273173EE /* BackgroundExecutionPersistenceTests.swift */,
 				1A0B94BE8C92AF3359C4AEF7 /* BackgroundTransferTests.swift */,
 				CA9858E7AF3AF020A4CDA064 /* BandwidthTransportTests.swift */,
+				8CE4531111102B210C5F1524 /* BulkImportTests.swift */,
 				6B6CE67B6E89E0FDC8E317E7 /* ContinuedProcessingTests.swift */,
 				DF695A9B1A09FF0B2019ECFA /* DASHLocalStreamAssemblyTests.swift */,
 				E9C628A81CA87B356C80F538 /* DownloadAdmissionTests.swift */,
@@ -1111,6 +1205,7 @@
 				0BBB9A29308EFDEE58F07BA3 /* DownloadSchedulerCancellationTests.swift */,
 				D7407E37C82806520B3691AB /* EmbeddedRuntimeTests.swift */,
 				A72A5D271DA98FAF2658D760 /* EmbeddedRuntimeTests+ExtractorUpdates.swift */,
+				4C441F14139BD1A77224D7E4 /* EmbeddedRuntimeTests+MultiSite.swift */,
 				D963C74C17067EB3ED7C9A21 /* ExportLifecycleTests.swift */,
 				1054DA4049A4694D9707DBDB /* ExportPublicationTests.swift */,
 				50637B3A3F622ACCC8BC6C1B /* ExtractorPackageTests.swift */,
@@ -1170,6 +1265,7 @@
 		D033F0F46EFF8C75D73B1DFA /* Downloads */ = {
 			isa = PBXGroup;
 			children = (
+				F9922FFAD3B76C19DE7DAE2E /* Aria2TransferPolicy.swift */,
 				F130C34CD9E3D0B13F59D679 /* AsyncPermitPool.swift */,
 				C97E78F74E3E259420022697 /* BatchProgressAggregator.swift */,
 				235DCEC6FC164FD119EFD7D8 /* BatchQueueOrdering.swift */,
@@ -1221,6 +1317,7 @@
 		D65F197859B54E99D1102597 /* AppModel */ = {
 			isa = PBXGroup;
 			children = (
+				8557F5ABBA750EA9240E3C4B /* IllucetAppModel+BulkImport.swift */,
 				9A720E360C8A2F421E014FD4 /* IllucetAppModel+DestinationsAndSupport.swift */,
 				93B923B22A9C8BE53831CF02 /* IllucetAppModel+DownloadConfiguration.swift */,
 				4E550CE7E83AB6EA2BCC3325 /* IllucetAppModel+ExtractorUpdates.swift */,
@@ -1244,6 +1341,7 @@
 			children = (
 				30D58B7259D69D989569B2CA /* AccountStore.swift */,
 				3C7357DD3F3702465B432EE1 /* CookieFileImport.swift */,
+				1E100338D3F77E88C2EC0347 /* ExternalMediaRuntime.swift */,
 				3EAF0A17C5211FAB1B47A4F9 /* ExtractorEngine.swift */,
 				EA94E76BA3D4DE74CB0EA783 /* HLSPlaylistParser.swift */,
 				7A42D59D5918D56FAEE2A59C /* HLSPlaylistResolver.swift */,
@@ -1295,6 +1393,7 @@
 			children = (
 				9EEDABE31B22A3A274E39C08 /* AuthorizedLiveTestConfiguration.swift */,
 				D0176F3244DBFE05971EA54B /* DeveloperFixtures.swift */,
+				ECD9B2D2AEEB5E841C290032 /* DeveloperFixtures+MultiSite.swift */,
 				327DB7F937192ACAC5F46DE9 /* DiagnosticStore.swift */,
 				8D667F47197A2C549869C07F /* FFmpegStage0ProofModels.swift */,
 				E4207F2E1325C02CF1455CD6 /* FFmpegStage0ProofRunner.swift */,
@@ -1329,10 +1428,15 @@
 				85745B72FC1E094022697C67 /* CoreFoundation.framework */,
 				A413F991700445535EA9CBEF /* CoreMedia.framework */,
 				9ACAC1E40F733E74F0C5F026 /* CoreVideo.framework */,
+				5E312007B76322F7AF127757 /* IllucetAria2.xcframework */,
 				EE804188CA457933955FAD8C /* IllucetMedia.xcframework */,
+				0A2F1C64D464FFA6DD720EA9 /* libc++.tbd */,
+				9CE68909C4908ADED0A45740 /* libiconv.tbd */,
 				7B705159EC4158DF0DF0C80C /* Python.xcframework */,
 				45D6997EEA60E3C906E75039 /* QuickJS.xcframework */,
+				EA7A70D95AE8AA991C1AD4E3 /* Security.framework */,
 				ADAFE6BC2D0B8E39D20768A7 /* VideoToolbox.framework */,
+				51F2CEFBA23DC89C130D307B /* WebKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1459,9 +1563,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				94CD335CF23BC8381052B0BA /* Assets.xcassets in Resources */,
+				285E1A5571237757964D810E /* BgUtils-LICENSE.txt in Resources */,
 				84479049BDD273CECACE5E70 /* Download with Illucet.shortcut in Resources */,
 				08083239408BF6962BE0BD72 /* LICENSE in Resources */,
 				1FE1EBD6CEC497314275D900 /* ThirdPartyNotices.txt in Resources */,
+				BEC8690B4DEEC33CFB79AF32 /* illucet-token.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1505,7 +1611,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\nexport COPYFILE_DISABLE=1\nexport EXPANDED_CODE_SIGN_IDENTITY_NAME=\"${EXPANDED_CODE_SIGN_IDENTITY_NAME:-Ad Hoc}\"\nexport EXPANDED_CODE_SIGN_IDENTITY=\"${EXPANDED_CODE_SIGN_IDENTITY:--}\"\n/usr/bin/python3 \"$PROJECT_DIR/Scripts/verify-python-package-bundle.py\" \\\n  --config \"$PROJECT_DIR/Config/Dependencies.sh\" \\\n  \"$PROJECT_DIR/Vendor/PythonPackages\"\nrsync -a --delete --delete-excluded \\\n  --exclude 'tests/' \\\n  --exclude '__pycache__/' \\\n  --exclude '*.pyc' \\\n  \"$PROJECT_DIR/PythonApp/\" \\\n  \"$CODESIGNING_FOLDER_PATH/PythonApp/\"\nrsync -a --delete --delete-excluded \\\n  --exclude '__pycache__/' \\\n  --exclude '*.pyc' \\\n  \"$PROJECT_DIR/Vendor/PythonPackages/\" \\\n  \"$CODESIGNING_FOLDER_PATH/PythonPackages/\"\n/usr/bin/python3 \"$PROJECT_DIR/Scripts/verify-python-package-bundle.py\" \\\n  --config \"$PROJECT_DIR/Config/Dependencies.sh\" \\\n  \"$CODESIGNING_FOLDER_PATH/PythonPackages\"\nsource \"$PROJECT_DIR/Vendor/Frameworks/Python.xcframework/build/utils.sh\"\ninstall_python Vendor/Frameworks/Python.xcframework PythonApp PythonPackages\n/usr/bin/xattr -cr \"$CODESIGNING_FOLDER_PATH\"\n";
+			shellScript = "set -euo pipefail\nexport COPYFILE_DISABLE=1\nexport EXPANDED_CODE_SIGN_IDENTITY_NAME=\"${EXPANDED_CODE_SIGN_IDENTITY_NAME:-Ad Hoc}\"\nexport EXPANDED_CODE_SIGN_IDENTITY=\"${EXPANDED_CODE_SIGN_IDENTITY:--}\"\n/usr/bin/python3 \"$PROJECT_DIR/Scripts/image-dependencies.py\"\n/usr/bin/python3 \"$PROJECT_DIR/Scripts/verify-python-package-bundle.py\" \\\n  --config \"$PROJECT_DIR/Config/Dependencies.sh\" \\\n  \"$PROJECT_DIR/Vendor/PythonPackages\"\nrsync -a --delete --delete-excluded \\\n  --exclude 'tests/' \\\n  --exclude '__pycache__/' \\\n  --exclude '*.pyc' \\\n  \"$PROJECT_DIR/PythonApp/\" \\\n  \"$CODESIGNING_FOLDER_PATH/PythonApp/\"\nrsync -a --delete --delete-excluded \\\n  --exclude '__pycache__/' \\\n  --exclude '*.pyc' \\\n  \"$PROJECT_DIR/Vendor/PythonPackages/\" \\\n  \"$CODESIGNING_FOLDER_PATH/PythonPackages/\"\n/usr/bin/python3 \"$PROJECT_DIR/Scripts/verify-python-package-bundle.py\" \\\n  --config \"$PROJECT_DIR/Config/Dependencies.sh\" \\\n  \"$CODESIGNING_FOLDER_PATH/PythonPackages\"\nsource \"$PROJECT_DIR/Vendor/Frameworks/Python.xcframework/build/utils.sh\"\ninstall_python Vendor/Frameworks/Python.xcframework PythonApp PythonPackages\n/usr/bin/xattr -cr \"$CODESIGNING_FOLDER_PATH\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1517,6 +1623,7 @@
 			files = (
 				A9DEB51B691ED5DE722D5327 /* DownloadActivityAttributes.swift in Sources */,
 				018DF216AEBA521FB137A335 /* IllucetLiveActivity.swift in Sources */,
+				A61F722BDD5F0FE6F95E5A3B /* MediaSite.swift in Sources */,
 				D0AF4CBB902E23747CA25002 /* SharedLinkInbox.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1527,6 +1634,7 @@
 			files = (
 				D1A8C4C7A9A498C3728FEADB /* AccountSettingsUITests.swift in Sources */,
 				FD312839240091B5E1E76701 /* BackgroundDownloadUITests.swift in Sources */,
+				98FF54FEBB7B6CE035458D66 /* BulkImportUITests.swift in Sources */,
 				06482BF942B9A6B482E12F77 /* IllucetModernizationUITests.swift in Sources */,
 				269F8B3B025CF1A48BE7ECA3 /* IllucetUIHarness.swift in Sources */,
 				961967173AF2CDB1656A5A2A /* IllucetUITests.swift in Sources */,
@@ -1552,6 +1660,7 @@
 				94FCED8129355005D02D1628 /* AppIdentity.swift in Sources */,
 				B8661B9E50894D228E478A4C /* AppearanceSettingsView.swift in Sources */,
 				96E8C1D48CDC6429EA31B8F3 /* ApplePlaybackVerifier.swift in Sources */,
+				27557F4C9E134AA10EE2FDE1 /* Aria2TransferPolicy.swift in Sources */,
 				29761095C56E18FCCD0CF4E1 /* AsyncPermitPool.swift in Sources */,
 				AA9C672729F5FBA35C5E104C /* AuthorizedLiveTestConfiguration.swift in Sources */,
 				AF6297B269F6DF03C2A92BE5 /* AutomaticExtractorUpdatePolicy.swift in Sources */,
@@ -1563,6 +1672,8 @@
 				A917ADA86D463E5A7C0A3801 /* BatchQueueViews.swift in Sources */,
 				A66FA680AD9E9F86A4BF282C /* BatchRestoration.swift in Sources */,
 				7FB6BE7BC768A2F76E193797 /* BrandedText.swift in Sources */,
+				00209EB969022CC6307295BC /* BulkImportView.swift in Sources */,
+				3266C6856D97433DA180160E /* BulkLinkImport.swift in Sources */,
 				AF267BBAE5B0DA7106EB69E5 /* ChapterSplitWorkflow.swift in Sources */,
 				3A1CE8184020D009D1C0F266 /* ChapterWorkflow.swift in Sources */,
 				4347F78282F7F38031A54DB0 /* CollectionFilter.swift in Sources */,
@@ -1574,6 +1685,7 @@
 				793E7580E3D1DF52819C7E76 /* CopyableVersionRow.swift in Sources */,
 				95DFF1B4B54C38DE76127913 /* DASHLocalStreamAssembler.swift in Sources */,
 				72A5FA09C457ECD1C7D9994F /* DependencyVersions.swift in Sources */,
+				68C464C9C76726635EAEA129 /* DeveloperFixtures+MultiSite.swift in Sources */,
 				06B0D7AA8C89031841EA7FD0 /* DeveloperFixtures.swift in Sources */,
 				1993D99087DFC7C0ADE1F228 /* DiagnosticStore.swift in Sources */,
 				C7DF34E33A0E5726DFAA5D6D /* DiagnosticsView.swift in Sources */,
@@ -1604,8 +1716,10 @@
 				D265D88F9AC326AB7667CD28 /* DownloadSharedLinkIntent.swift in Sources */,
 				6E091C040FB07C2516D1B867 /* DownloadSpecialOutputPipeline.swift in Sources */,
 				93F99FAA5F8039FF5DEDE7F8 /* DownloadView.swift in Sources */,
+				8FB2B509279F88EFC40B2380 /* EngineSettingsView.swift in Sources */,
 				D0EA05E9160B21F84ACBA3E6 /* ExportManager.swift in Sources */,
 				A565F1ABFF1D13173586F9B3 /* ExportPublicationModels.swift in Sources */,
+				9EA4CFCC95E14C828F587D60 /* ExternalMediaRuntime.swift in Sources */,
 				FE99BD7B90707F20E13BE271 /* ExtractorEngine.swift in Sources */,
 				52F79791737E752E27FA4803 /* ExtractorPackageCatalog.swift in Sources */,
 				DD5BDE466F9C01F494E7E5E4 /* ExtractorPackageInstaller.swift in Sources */,
@@ -1615,6 +1729,7 @@
 				31FFE2916C95BBEEE490583C /* ExtractorUpdateView.swift in Sources */,
 				476E241DA8A082DFB802561F /* FFmpegStage0ProofModels.swift in Sources */,
 				A46AE06007C843103FCAA58C /* FFmpegStage0ProofRunner.swift in Sources */,
+				04901F2C8426B167CFB82D7E /* FailedLinkExport.swift in Sources */,
 				1161E86D5D61B1E34615DBFF /* FirstPasteTipView.swift in Sources */,
 				1E7E792089889E27E9F47055 /* FirstRunState.swift in Sources */,
 				BEEF944A7CF9517EC3D3280C /* FormatSelection.swift in Sources */,
@@ -1630,6 +1745,7 @@
 				6FFCF0BB6B90773ABE2768B7 /* HistoryView.swift in Sources */,
 				9A917FBF21AB71B4101A7F13 /* IllucetAES128CBC.c in Sources */,
 				4AC6A0CB3AA6D538A5918E00 /* IllucetApp.swift in Sources */,
+				4536B5701FCF7E1FB19386DB /* IllucetAppModel+BulkImport.swift in Sources */,
 				90F3AC236339600D190FBE2A /* IllucetAppModel+DestinationsAndSupport.swift in Sources */,
 				79EC9FD806C909E42210D77D /* IllucetAppModel+DownloadConfiguration.swift in Sources */,
 				5A5FD7A3D69709C8D4A4B26F /* IllucetAppModel+ExtractorUpdates.swift in Sources */,
@@ -1645,6 +1761,7 @@
 				48A8C4D47C0B96F28FDDA797 /* IllucetAppPersistenceProjection.swift in Sources */,
 				B58B0B21B565D8B03CB87E63 /* IllucetAppPresentationState.swift in Sources */,
 				9EEB539C57BAD523CCAB6CDF /* IllucetAppSupportModels.swift in Sources */,
+				AC19B0A6BF1E9035C7BE19FF /* IllucetAria2.cpp in Sources */,
 				C1CC3C2490989D115C49622F /* IllucetFFmpegArtwork.c in Sources */,
 				459FB6EE0BC412E73209FF66 /* IllucetFFmpegAudio.c in Sources */,
 				519A91C996C1DA01DB5BFAFB /* IllucetFFmpegBridge.c in Sources */,
@@ -1665,6 +1782,7 @@
 				D9F68B51025EA960931D0CA3 /* IllucetQuickJSBridge.c in Sources */,
 				59BE9C39584151CDD3007BD6 /* IllucetRootView.swift in Sources */,
 				2D8EF77CBC42B6A9D615428F /* IllucetTheme.swift in Sources */,
+				E2BF8B2A4978E4D530EA62FA /* IllucetWebKitBridge.m in Sources */,
 				1CA4CD1933D3E761195BCA3A /* InlineSelection.swift in Sources */,
 				2EC167CE9E0330DEC1128CB0 /* JobNotificationPolicy.swift in Sources */,
 				9E082028012B126DA43B4B2F /* JobStatusPresentation.swift in Sources */,
@@ -1682,9 +1800,12 @@
 				85AE6205A1B17D28B16822C3 /* MediaConversionRequestBuilder.swift in Sources */,
 				9733CB585BE81334C327312A /* MediaPackageWorkflow.swift in Sources */,
 				A069AC55B3EDB7615703B75D /* MediaProcessor.swift in Sources */,
+				B30549C8946F6B740B051158 /* MediaSite.swift in Sources */,
 				3A851E6B3DBDC6BC45B5E9E2 /* MetadataSheet.swift in Sources */,
 				1E7113893D28A73B15A589B6 /* MetadataSidecarWriter.swift in Sources */,
+				1393F21D538DA95BE1BD6948 /* NativeAria2Downloader.swift in Sources */,
 				F35D726E458F66B9ABD48EF0 /* NativeFFmpegMediaProcessor.swift in Sources */,
+				7B116283DF30882CB05F2E86 /* NativeImageProcessor.swift in Sources */,
 				BD0EFC4A821099AACEF92BE5 /* NativeMediaFixtures.swift in Sources */,
 				22E18396C6CEBBAD24D15F6A /* NativeTransferAcknowledgements.swift in Sources */,
 				FE6D08C8E08E2D0A342E3DCF /* NetworkPathMonitorService.swift in Sources */,
@@ -1709,6 +1830,7 @@
 				956E0E823A426BFA35EDC12C /* QueueView.swift in Sources */,
 				BEA4A92CFCFC869AA17D12FE /* QuickStart.swift in Sources */,
 				44FF3793C302DA40168DA4BA /* QuickStartViews.swift in Sources */,
+				5A0C21DA0B1D9640AD88C879 /* RedditPageLoader.swift in Sources */,
 				BAEC93CC763CADC23AB1D68D /* RetainedMediaReprocessView.swift in Sources */,
 				22A05903E1F4B1CA1DB15228 /* RetainedMediaReprocessor.swift in Sources */,
 				01A2B51248605C5D04A77B7F /* RuntimeEnvironment.swift in Sources */,
@@ -1764,6 +1886,7 @@
 				444979D504718F7E71F8F107 /* YTDLPExtractorEngine.swift in Sources */,
 				014376CB38BA48B151B90565 /* YouTubeSessionProbe.swift in Sources */,
 				700286023C19F71E4189BA5C /* YouTubeSignInProbeView.swift in Sources */,
+				74588AA258FCC3F4945DD9E3 /* YouTubeTokenGenerator.swift in Sources */,
 				10232AF72BE7A7F2FEF3A034 /* ZIPArchiveWriter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1773,9 +1896,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				0A2D3CA70B774F74066F8CD0 /* AccountStoreTests.swift in Sources */,
+				7C15554B9326AA2F4F148470 /* Aria2DownloadTests.swift in Sources */,
 				F1BFC4132E187E565E58336F /* BackgroundExecutionPersistenceTests.swift in Sources */,
 				EECAE1BFFF3834F6A05D4E38 /* BackgroundTransferTests.swift in Sources */,
 				3AC71D95D329E8101E379FAB /* BandwidthTransportTests.swift in Sources */,
+				738257DB9D5B085D5CBA330D /* BulkImportTests.swift in Sources */,
 				8783A72C2EAA2FE6557E173D /* ContinuedProcessingTests.swift in Sources */,
 				41B88AB968F88DEE33E46A75 /* DASHLocalStreamAssemblyTests.swift in Sources */,
 				DE3417C890B1D406154FCC0B /* DownloadAdmissionTests.swift in Sources */,
@@ -1784,6 +1909,7 @@
 				68F379476ABD60E6EE1B2653 /* DownloadFoundationTests.swift in Sources */,
 				583D825F60C87F7F8F8EE917 /* DownloadSchedulerCancellationTests.swift in Sources */,
 				AD4733DE7816AFB6C2576FB1 /* EmbeddedRuntimeTests+ExtractorUpdates.swift in Sources */,
+				A05C01C1D03204AC648B19D3 /* EmbeddedRuntimeTests+MultiSite.swift in Sources */,
 				51BA8E9E9D960507438B3575 /* EmbeddedRuntimeTests.swift in Sources */,
 				CEF9A3F03E47A1111042271F /* ExportLifecycleTests.swift in Sources */,
 				54D292071601936510F061D3 /* ExportPublicationTests.swift in Sources */,
@@ -1903,7 +2029,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 11;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -1930,7 +2056,7 @@
 				INFOPLIST_KEY_UIBackgroundModes = "fetch processing";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1976,8 +2102,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 11;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_CODE_COVERAGE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1997,7 +2124,7 @@
 				INFOPLIST_KEY_UIBackgroundModes = "fetch processing";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2109,6 +2236,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconOrange AppIconPurple AppIconPink";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_ENTITLEMENTS = "Config/Illucet-Shared.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2136,6 +2264,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconOrange AppIconPurple AppIconPink";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_ENTITLEMENTS = "Config/Illucet-Shared.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (

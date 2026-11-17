@@ -345,7 +345,7 @@ def _resolve_hls_playlist_plan(request: dict[str, Any]) -> str:
     return _envelope("resolve_hls_playlist_plan", data)
 
 
-def handle_request(request_json: str) -> str:
+def _dispatch_request(request_json: str) -> str:
     if _illucet_native.is_cancelled():
         raise IllucetCancelled(
             "The native cancellation flag was set before Python dispatch."
@@ -353,6 +353,38 @@ def handle_request(request_json: str) -> str:
 
     request = json.loads(request_json)
     action = request.get("action")
+
+    if action == "webkit_proof":
+        output = _illucet_native.webkit_evaluate("console.log(JSON.stringify({answer:6*7}));", 5000, 1024)
+        redacted = False
+        try:
+            _illucet_native.webkit_evaluate("throw 'secret-webkit-value';", 5000, 1024)
+        except RuntimeError as error:
+            redacted = "secret-webkit-value" not in str(error)
+        bounded = timed_out = False
+        try:
+            _illucet_native.webkit_evaluate("console.log('x'.repeat(2048));", 5000, 1024)
+        except OverflowError:
+            bounded = True
+        try:
+            _illucet_native.webkit_evaluate("while(true){}", 200, 1024)
+        except TimeoutError:
+            timed_out = True
+        recovered = _illucet_native.webkit_evaluate("console.log('recovered');", 5000, 1024) == "recovered"
+        return _envelope(action, {"answer":json.loads(output)["answer"], "redacted":redacted,
+            "bounded":bounded,"timed_out":timed_out,"recovered":recovered})
+
+    if action in {"extract_post", "extract_asset", "resolve_asset", "download_asset", "validate_account_session"}:
+        import illucet_multisite
+        try:
+            return _envelope(action, illucet_multisite.handle(request))
+        except illucet_ytdlp_extractor.SafeExtractionFailure as error:
+            return _error_envelope(action, error)
+        except Exception as error:
+            if _illucet_native.is_cancelled():
+                raise IllucetCancelled("The media operation was cancelled.") from None
+            illucet_multisite.record_failure(error, "dispatch_asset")
+            return _error_envelope(action, illucet_ytdlp_extractor.classify_extraction_error(error))
 
     if action == "probe_youtube_session":
         from illucet_session_probe import probe
@@ -420,3 +452,18 @@ def handle_request(request_json: str) -> str:
         return _resolve_hls_playlist_plan(request)
 
     raise ValueError(f"Unsupported bridge action: {action!r}")
+
+
+def handle_request(request_json: str) -> str:
+    import illucet_potoken
+    request = json.loads(request_json)
+    preferences = request.get("engine_preferences", {})
+    if not isinstance(preferences, dict):
+        raise ValueError("Invalid engine preferences")
+    token = illucet_ytdlp_provider.active_engine_preferences.set(preferences)
+    proof = illucet_potoken.begin(request)
+    try:
+        return illucet_potoken.finish_response(_dispatch_request(request_json))
+    finally:
+        illucet_potoken.active_request.reset(proof)
+        illucet_ytdlp_provider.active_engine_preferences.reset(token)

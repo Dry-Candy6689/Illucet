@@ -11,6 +11,10 @@ import illucet_bridge
 
 
 class AccountTests(unittest.TestCase):
+    def test_bot_signin_prompt_does_not_authorize_account_retry(self):
+        error = extractor.classify_extraction_error(RuntimeError("Sign in to confirm you're not a bot"))
+        self.assertEqual(error.code, "service_challenge")
+
     def setUp(self):
         FakeYoutubeDL.instances = []
         FakeYoutubeDL.failure = None

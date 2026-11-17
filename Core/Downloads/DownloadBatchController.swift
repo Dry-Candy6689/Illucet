@@ -67,13 +67,20 @@ actor DownloadBatchController {
         configuration: DownloadConfiguration,
         itemOverrides: [String: DownloadConfiguration] = [:],
         destinationStructure: BatchDestinationStructure,
-        skipArchivedItems: Bool
+        skipArchivedItems: Bool,
+        admissionID: UUID? = nil,
+        holdForPersistence: Bool = false
     ) throws -> DownloadBatch {
+        if let admissionID, let existing = batches[admissionID] {
+            guard existing.kind == analysis.kind else { throw PlaylistModelError.unknownSelection }
+            return existing
+        }
         let entries = try selection.resolvedEntries(
             in: analysis,
             maximumItems: configuration.maximumPlaylistItems
         )
         var batch = DownloadBatch(
+            id: admissionID ?? UUID(),
             analysis: analysis,
             selection: selection,
             configuration: configuration,
@@ -91,6 +98,11 @@ actor DownloadBatchController {
         batch.state = batch.items.allSatisfy(\.state.isTerminal)
             ? .completed
             : .preparing
+        if holdForPersistence && !batch.state.isTerminal {
+            batch.admissionPaused = true
+            batch.state = .paused
+            pausedBatchIDs.insert(batch.id)
+        }
         batch.progress = BatchProgressAggregator.progress(
             items: batch.items,
             jobsByID: jobs
@@ -169,11 +181,7 @@ actor DownloadBatchController {
         if job.state == .completed,
            job.exportOutcome != .duplicateSkipped,
            !wasExplicitlySkipped {
-            let record = DownloadArchiveEntry.youtube(
-                videoID: job.videoID,
-                completedAt: job.updatedAt,
-                batchID: batch.id
-            )
+            let record = DownloadArchiveEntry.completed(job: job, batchID: batch.id)
             archive[record.id] = record
             continuation.yield(.upsertArchive(record))
         }
@@ -600,8 +608,9 @@ actor DownloadBatchController {
     private func applyArchiveSkips(to batch: inout DownloadBatch) {
         guard batch.skipArchivedItems else { return }
         for index in batch.items.indices {
+            let identity = batch.itemOverrides[batch.items[index].id]?.sourceIdentity
             guard let videoID = batch.items[index].videoID,
-                  archive["youtube:\(videoID)"] != nil
+                  archive[identity?.archiveID ?? "youtube:\(videoID)"] != nil
             else {
                 continue
             }

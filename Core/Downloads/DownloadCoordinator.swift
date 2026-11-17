@@ -21,6 +21,7 @@ actor DownloadCoordinator {
 
     private let continuation: AsyncStream<DownloadCoordinatorEvent>.Continuation
     private let downloader: any StreamDownloading
+    private let aria2Downloader: any Aria2Downloading
     private let mediaProcessor: any MediaProcessor
     private let storage: StorageManager
     private let exportFlow: DownloadExportFlow
@@ -53,6 +54,7 @@ actor DownloadCoordinator {
     private var foregroundResumedAt: [UUID: UInt64] = [:]
     private var expiredProcessing = Set<UUID>()
     private var intentExecution = Set<UUID>()
+    private var aria2NetworkDeferrals = Set<UUID>()
     private var progressEmissionStages: [UUID: DownloadStage] = [:]
     private var progressEmissionTimes: [UUID: ContinuousClock.Instant] = [:]
     private let fileManager: FileManager
@@ -99,6 +101,7 @@ actor DownloadCoordinator {
     init(
         runtime: any RuntimeProviding,
         downloader: any StreamDownloading,
+        aria2Downloader: any Aria2Downloading = NativeAria2Downloader.shared,
         DASHDownloader: (any DASHFragmentDownloading)? = nil,
         DASHAssembler: (any DASHLocalStreamAssembling)? = nil,
         HLSDownloader: (any HLSResourceDownloading)? = nil,
@@ -133,6 +136,7 @@ actor DownloadCoordinator {
         continuation = captured
         let eventContinuation = captured!
         self.downloader = downloader
+        self.aria2Downloader = aria2Downloader
         self.mediaProcessor = mediaProcessor
         self.storage = storage
         let activeExportFlow = DownloadExportFlow(
@@ -173,6 +177,7 @@ actor DownloadCoordinator {
         pipelineRunner = DownloadPipelineRunner(
             runtime: runtime,
             downloader: downloader,
+            aria2Downloader: aria2Downloader,
             DASHDownloader: DASHDownloader,
             DASHAssembler: DASHAssembler,
             HLSDownloader: HLSDownloader,
@@ -233,6 +238,7 @@ actor DownloadCoordinator {
                 }
             }
         }
+        await deferAria2TransfersForNetworkPolicy()
         schedulePendingJobs()
     }
 
@@ -359,6 +365,9 @@ actor DownloadCoordinator {
             return existing
         }
         var selected = configuration
+        selected.sourceIdentity = metadata.sourceIdentity
+        selected.assetFingerprint = metadata.assetFingerprint
+        if metadata.sourceIdentity != nil { selected.sponsorBlock = .disabled }
         selected.sponsorBlock = selected.effectiveSponsorBlock
         if selected.thumbnailBehavior != .thumbnailOnly,
            !selected.isSubtitlesOnly,
@@ -451,7 +460,10 @@ actor DownloadCoordinator {
 
     private func claimPause(_ id: UUID) -> PauseClaim? {
         guard var job = jobs[id], job.canPause, pauseControls[id] == nil else { return nil }
+        aria2NetworkDeferrals.remove(id)
         let restart = runningTasks[id] != nil && (
+            job.configuration.enginePreferences?.download == .aria2
+            ||
             FragmentSourceLeases.shared.hasActiveSource(jobID: id)
             || [.analyzing, .preparing, .downloadingThumbnail, .downloadingSubtitles,
                 .waitingForProcessing, .waitingForBackgroundTime].contains(job.stage)
@@ -509,6 +521,9 @@ actor DownloadCoordinator {
         jobs[id]?.resumableTransferStage = nil
         task.cancel()
         _ = await downloader.cancel(jobID: id)
+        if jobs[id]?.configuration.enginePreferences?.download == .aria2 {
+            await aria2Downloader.cancel(jobID: id)
+        }
         await acknowledgeFragmentPauseControl(jobID: id, barrierID: barrier.id)
         await task.value
     }
@@ -635,6 +650,7 @@ actor DownloadCoordinator {
         }
         if transferRecoveries[id] != nil { markTransferCleanupPending(id) }
         resumeAfterPause.remove(id)
+        aria2NetworkDeferrals.remove(id)
         await stopResumeOperation(id)
         await pauseGate.resume(id)
         expiredProcessing.remove(id)
@@ -644,6 +660,9 @@ actor DownloadCoordinator {
         await networkController.cancelRequests(jobID: id)
         await exportFlow.cancelDuplicateRequests(jobID: id)
         _ = await downloader.cancel(jobID: id)
+        if jobs[id]?.configuration.enginePreferences?.download == .aria2 {
+            await aria2Downloader.cancel(jobID: id)
+        }
         await downloader.setAdmissionPaused(false, jobID: id)
         await releaseTransferPermit(jobID: id)
         await mediaProcessor.cancel(operationID: id)
@@ -1071,6 +1090,7 @@ actor DownloadCoordinator {
             await finishExecutionDeferral(jobID, status: unavailable.status)
             return
         } catch is CancellationError {
+            if await finishAria2NetworkDeferral(jobID) { return }
             if await finishTransferRecoveryPipeline(jobID) { return }
             if await finishTransferRecoveryPipeline(jobID) { return }
             if await finishProcessingExpiration(jobID) { return }
@@ -1079,6 +1099,7 @@ actor DownloadCoordinator {
             cleanupFailedWorkIfConfigured(jobID: jobID)
         } catch {
             if Task.isCancelled || retryController.isCancellation(error) {
+                if await finishAria2NetworkDeferral(jobID) { return }
                 if await finishTransferRecoveryPipeline(jobID) { return }
                 if await finishProcessingExpiration(jobID) { return }
                 if await finishFragmentPauseIfRequested(jobID) { return }
@@ -1324,6 +1345,8 @@ actor DownloadCoordinator {
         guard snapshot != currentNetwork else { return }
         currentNetwork = snapshot
         resetTransferActivity()
+        await deferAria2TransfersForNetworkPolicy()
+        guard currentNetwork == snapshot else { return }
         await networkController.receiveNetworkChange(
             snapshot,
             jobs: Array(jobs.values),
@@ -1331,6 +1354,42 @@ actor DownloadCoordinator {
             context: makeNetworkContext()
         )
         schedulePendingJobs()
+    }
+
+    private func deferAria2TransfersForNetworkPolicy() async {
+        let snapshot = currentNetwork
+        for job in Array(jobs.values) where job.state == .running
+            && job.configuration.enginePreferences?.download == .aria2
+            && FragmentSourceLeases.shared.hasActiveSource(jobID: job.id) {
+            guard currentNetwork == snapshot else { return }
+            guard let current = jobs[job.id], current.state == .running,
+                  networkDecision(for: current) != .allow, let task = runningTasks[job.id] else { continue }
+            aria2NetworkDeferrals.insert(job.id)
+            if var current = jobs[job.id] {
+                current.state = .queued
+                current.stage = .waiting
+                current.progress.smoothedBytesPerSecond = nil
+                current.progress.downloadETASeconds = nil
+                current.updatedAt = .now
+                jobs[job.id] = current
+                continuation.yield(.upsertJob(current))
+            }
+            task.cancel()
+            _ = await downloader.cancel(jobID: job.id)
+            await aria2Downloader.cancel(jobID: job.id)
+            await task.value
+        }
+    }
+
+    private func finishAria2NetworkDeferral(_ id: UUID) async -> Bool {
+        guard aria2NetworkDeferrals.remove(id) != nil else { return false }
+        expiredProcessing.remove(id)
+        await releaseTransferPermit(jobID: id)
+        await releaseProcessingPermit(jobID: id)
+        runningTasks[id] = nil
+        speedEstimators[id] = nil
+        schedulePendingJobs()
+        return true
     }
 
     private func setWaitingState(
@@ -2148,6 +2207,24 @@ actor DownloadCoordinator {
 
     private func finishFailure(_ jobID: UUID, error: any Error) async {
         guard var job = jobs[jobID] else { return }
+        let foreground: (ForegroundResumeReason, String, String)? = switch error {
+        case YouTubeTokenError.needsForeground:
+            (.proofToken, "youtube_token_foreground", YouTubeTokenError.needsForeground.localizedDescription)
+        case RedditPageError.needsForeground:
+            (.websiteAccess, "reddit_browser_foreground", RedditPageError.needsForeground.localizedDescription)
+        default: nil
+        }
+        if let foreground {
+            job.state = .needsAttention
+            job.stage = .waiting
+            job.foregroundResumeReason = foreground.0
+            job.errorCode = foreground.1
+            job.errorMessage = foreground.2
+            job.updatedAt = .now
+            jobs[jobID] = job
+            continuation.yield(.upsertJob(job))
+            return
+        }
         let message = safeErrorMessage(error)
         if job.configuration.destination == .share,
            job.exportOutcome == .sharePending

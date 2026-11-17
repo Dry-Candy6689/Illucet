@@ -28,6 +28,10 @@ struct ClipboardPreferences: Codable, Equatable, Sendable {
 
 enum LinkIntakePolicy {
     static func identifiesSameLink(_ first: String, _ second: String) -> Bool {
+        if let a = supportedURL(first), let b = supportedURL(second),
+           MediaSite.recognize(a) != .youtube || MediaSite.recognize(b) != .youtube {
+            return SharedLinkParser.canonicalURL(a) == SharedLinkParser.canonicalURL(b)
+        }
         guard let firstURL = URL(string: first.trimmingCharacters(in: .whitespacesAndNewlines)),
               let secondURL = URL(string: second.trimmingCharacters(in: .whitespacesAndNewlines)),
               let firstIntent = try? YouTubeURLIntentClassifier.classify(firstURL),
@@ -42,7 +46,10 @@ enum LinkIntakePolicy {
 
     static func supportedURL(_ text: String?) -> URL? {
         guard let text, let url = URL(string: text.trimmingCharacters(in: .whitespacesAndNewlines)),
-              (try? YouTubeURLIntentClassifier.classify(url)) != nil else { return nil }
+              let canonical = SharedLinkParser.canonicalURL(url),
+              MediaSite.recognize(canonical) != nil else { return nil }
+        if MediaSite.recognize(canonical) == .youtube,
+           (try? YouTubeURLIntentClassifier.classify(canonical)) == nil { return nil }
         return url
     }
 }
@@ -65,6 +72,13 @@ enum ShortcutBehavior: String, Codable, CaseIterable, Identifiable, Sendable {
     case download = "Download immediately"
     case options = "Show download options"
     case ask = "Ask every time"
+    case save = "Save for later"
+    var id: String { rawValue }
+}
+
+enum ShortcutForegroundPolicy: String, Codable, CaseIterable, Identifiable, Sendable {
+    case whenNeeded = "Open Illucet when needed"
+    case keepPending = "Keep pending until I open it"
     var id: String { rawValue }
 }
 
@@ -72,6 +86,8 @@ struct ShortcutPreferences: Codable, Equatable, Sendable {
     var behavior: ShortcutBehavior = .download
     var preferredPresetID: UUID?
     var backgroundFirst = true
+    var foregroundPolicy: ShortcutForegroundPolicy? = nil
+    var allowsForeground: Bool { foregroundPolicy != .keepPending }
 
     static func migrating(_ old: SharedLinkPreferences?) -> Self {
         guard let old else { return Self() }

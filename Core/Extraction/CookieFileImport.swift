@@ -4,7 +4,7 @@ import Foundation
 /// into app storage and passes the validated values directly to AccountStore.
 enum CookieFileImport {
     static let maximumBytes = 262_144
-    static func parse(_ data: Data, now: Date = .now) throws -> [YouTubeAccountCookie] {
+    static func parse(_ data: Data, now: Date = .now, site: MediaSite = .youtube) throws -> [YouTubeAccountCookie] {
         guard data.count <= maximumBytes, let text = String(data: data, encoding: .utf8),
               text.hasPrefix("# Netscape HTTP Cookie File") || text.hasPrefix("# HTTP Cookie File")
         else { throw AccountError.invalidSession }
@@ -16,13 +16,13 @@ enum CookieFileImport {
             let fields = line.split(separator: "\t", omittingEmptySubsequences: false).map(String.init)
             guard fields.count == 7 else { throw AccountError.invalidSession }
             // Unrelated browser cookies never enter the account profile.
-            guard YouTubeAccountCookie.domains.contains(fields[0]) else { continue }
+            guard site == .youtube ? YouTubeAccountCookie.domains.contains(fields[0]) : site.owns(host: String(fields[0]).trimmingCharacters(in: CharacterSet(charactersIn: "."))) else { continue }
             guard ["TRUE", "FALSE"].contains(fields[1]), ["TRUE", "FALSE"].contains(fields[3]),
                   let expiry = Int64(fields[4]), expiry >= 0 else { throw AccountError.invalidSession }
             cookies.append(YouTubeAccountCookie(domain: fields[0], path: fields[2],
                 name: fields[5], value: fields[6], secure: fields[3] == "TRUE",
                 expires: expiry == 0 ? nil : expiry))
         }
-        return try YouTubeAccountCookie.validated(cookies, now: now)
+        return try YouTubeAccountCookie.validated(cookies, now: now, site: site)
     }
 }

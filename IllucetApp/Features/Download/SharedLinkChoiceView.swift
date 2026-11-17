@@ -24,7 +24,7 @@ struct SharedLinkChoiceView: View {
                             .disabled(model.isAnalyzing)
                     }
                 } footer: {
-                    brandedText("The Download with Illucet shortcut uses Settings → Shortcuts. A missing or incompatible preset opens full options. Collections always open their selection screen.")
+                    brandedText("Set the Download with Illucet shortcut’s action in Settings → Sharing & Shortcuts. A missing or incompatible preset opens download options. Collections open their selection screen.")
                 }
             }
             .navigationTitle("Open shared link")

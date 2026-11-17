@@ -24,6 +24,7 @@ xcuserdata/
 
 # Python bytecode, environments, and tool caches
 __pycache__/
+PythonApp/_image_packages/
 *.py[cod]
 .venv/
 venv/

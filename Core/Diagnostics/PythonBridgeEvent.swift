@@ -75,6 +75,14 @@ private struct RawPythonBridgeEvent: Decodable {
 final class PythonEventRecorder: @unchecked Sendable {
     private let lock = NSLock()
     private var storedEvents: [PythonBridgeEvent] = []
+    private var assetObservers: [UUID: (UUID, @Sendable (Int64, Int64?) -> Void)] = [:]
+
+    func observeAssetProgress(jobID: UUID, _ callback: @escaping @Sendable (Int64, Int64?) -> Void) -> UUID {
+        let token = UUID()
+        lock.withLock { assetObservers[token] = (jobID, callback) }
+        return token
+    }
+    func removeAssetObserver(_ token: UUID) { _ = lock.withLock { assetObservers.removeValue(forKey: token) } }
 
     func record(requestID: UInt64, data: Data) {
         guard let raw = try? JSONDecoder().decode(
@@ -84,7 +92,18 @@ final class PythonEventRecorder: @unchecked Sendable {
             return
         }
 
+        if raw.kind == "asset_progress",
+           case let .string(jobID) = raw.payload["job_id"],
+           case let .number(bytes) = raw.payload["bytes"], bytes.isFinite, bytes >= 0, bytes < Double(Int64.max) {
+            let total: Int64?
+            if case let .number(value) = raw.payload["total"], value.isFinite, value > 0, value < Double(Int64.max) { total = Int64(value) }
+            else { total = nil }
+            let callbacks = lock.withLock { assetObservers.values.filter { $0.0.uuidString == jobID }.map { $0.1 } }
+            for callback in callbacks { callback(Int64(bytes), total) }
+            return
+        }
         lock.lock()
+        if storedEvents.count >= 4096 { storedEvents.removeFirst(1024) }
         storedEvents.append(
             PythonBridgeEvent(
                 requestID: requestID,

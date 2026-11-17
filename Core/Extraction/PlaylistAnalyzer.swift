@@ -278,10 +278,12 @@ final class YTDLPPlaylistAnalyzer: PlaylistAnalyzing, @unchecked Sendable {
 
     private let python: PythonEngine
     private let authentication: AccountAuthentication?
+    private let preferences: EnginePreferences?
 
-    init(python: PythonEngine, authentication: AccountAuthentication? = nil) {
+    init(python: PythonEngine, authentication: AccountAuthentication? = nil, preferences: EnginePreferences? = nil) {
         self.python = python
         self.authentication = authentication
+        self.preferences = preferences
     }
 
     func analyze(url: URL, maximumEntries: Int) async throws -> PlaylistAnalysis {
@@ -315,7 +317,7 @@ final class YTDLPPlaylistAnalyzer: PlaylistAnalyzing, @unchecked Sendable {
         do {
             let response = try await python.executeAuthenticated(
                 requestID: PythonRequestIDAllocator.next(),
-                requestJSON: requestJSON, authentication: authentication
+                requestJSON: requestJSON, authentication: authentication, preferences: preferences
             )
             return try Self.decodeAndValidateResponse(
                 response,

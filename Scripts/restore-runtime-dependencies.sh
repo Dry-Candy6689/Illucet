@@ -14,3 +14,5 @@ TAG="$(read_runtime_value tag)"
 ARCHIVE="$(read_runtime_value archive)"
 gh release download "$TAG" --repo "$REPOSITORY" --pattern "$ARCHIVE" --dir "$WORK"
 python3 "$ROOT/Scripts/restore-runtime-dependencies.py" "$WORK/$ARCHIVE" "$ROOT"
+python3 "$ROOT/Scripts/image-dependencies.py" --restore
+python3 "$ROOT/Scripts/build-aria2-ios.py" --if-needed

@@ -31,7 +31,7 @@ final class PhysicalRefinementUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["download.hero"].isHittable)
         capture(app, "Physical guide finishes at true Download top")
         selectWorkspaceTab("Settings", in: app)
-        let shortcutsRow = app.buttons["Shortcuts"]
+        let shortcutsRow = app.buttons["Sharing & Shortcuts"]
         for _ in 0..<6 where !shortcutsRow.isHittable { app.swipeDown() }
         XCTAssertTrue(shortcutsRow.waitForExistence(timeout: 4)); shortcutsRow.tap()
         app.buttons["shortcuts.install"].tap()

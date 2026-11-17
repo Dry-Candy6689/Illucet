@@ -34,7 +34,7 @@ struct OutputDetailView: View {
                             ProgressView("Opening saved file…")
                         } else if record.isSubtitlesOnly {
                             subtitlesOnlyPreview
-                        } else if record.isThumbnailOnly,
+                        } else if record.isImageOutput,
                            let image = savedThumbnail {
                             Image(uiImage: image)
                                 .resizable()
@@ -481,7 +481,7 @@ struct OutputDetailView: View {
         Label(
             record.isSubtitlesOnly
                 ? "Subtitle files are validated directly and do not use the media probe."
-                : record.isThumbnailOnly
+                : record.isImageOutput
                 ? "The image was decoded and written in the selected format."
                 : record.exportOutcome == .duplicateSkipped
                     ? "No new output was created."
@@ -623,7 +623,7 @@ struct OutputDetailView: View {
         let opened = await Task.detached {
             let session = resolver.open(record, fallbackBookmark: bookmark)
             var data: Data?, failure: SavedOutputAccessFailure?
-            if record.isThumbnailOnly, let original = record.fileURL, session.urls[original] != nil {
+            if record.isImageOutput, let original = record.fileURL, session.urls[original] != nil {
                 do { data = try session.read(original) { try Data(contentsOf: $0) } }
                 catch {
                     failure = (error as? SavedOutputAccessFailure) ?? .unavailable
@@ -641,7 +641,7 @@ struct OutputDetailView: View {
     private var unavailableMessage: String {
         if needsFolderAccess { return SavedOutputAccessFailure.authorizationRequired.localizedDescription }
         if record.savedToPhotos && record.destination == .photos {
-            return record.isThumbnailOnly
+            return record.isImageOutput
                 ? "The thumbnail was saved to Photos. No Files copy was requested."
                 : "The verified media was saved to Photos. No Files copy was requested."
         }
@@ -666,7 +666,7 @@ struct OutputDetailView: View {
             if record.status == .completed,
                existingFileURL != nil,
                record.probe != nil,
-               !record.isThumbnailOnly,
+               !record.isImageOutput,
                !record.isSubtitlesOnly,
                !canPlay {
                 return "This downloaded file is valid. Apple’s built-in player does not support this output’s container or codec. A compatible app may be able to open it."

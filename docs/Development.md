@@ -5,6 +5,24 @@ from `project.yml` with `xcodegen generate`. Preserve the iOS 26 deployment floo
 
 ## Fast checks
 
+Image extractors are bundled separately from the on-device yt-dlp updater. The
+runtime restore command also restores their exact wheels from
+`Config/ImageDependencies.json`; `python3 Scripts/image-dependencies.py` verifies
+their offline content inventory. No moving release aliases or native wheels are used.
+
+`Scripts/verify-runtime-licenses.py` checks the exact runtime package licenses and
+BgUtils bundle. Pass `--bundle` with an app path to inspect a built payload.
+The BgUtils adapter entry and pinned npm package are in `TokenProvider`. Rebuild
+the browser script with the esbuild version in `Config/TokenProvider.json`:
+
+```sh
+esbuild TokenProvider/entry.js --bundle --format=iife --target=safari17 --minify \
+  --legal-comments=inline --outfile=IllucetApp/TokenResources/illucet-token.js
+```
+
+Review and update the bundle hash and its public upstream key allowlist entry
+when rebuilding. The native source package includes BgUtils's exact source.
+
 ```sh
 Scripts/verify.sh static
 ```
@@ -13,7 +31,30 @@ This checks documentation links, generated dependency expectations, Python-packa
 integrity and Python unit tests. Native frameworks are restored separately as
 explained in [BuildFromScratch](BuildFromScratch.md).
 
+## aria2 transfer engine
+
+`python3 Scripts/build-aria2-ios.py --if-needed` builds pinned, unmodified aria2
+and OpenSSL for device and both Simulator architectures. `Config/Aria2.json`
+records its source digest. The older pinned runtime archive rebuilds this component
+after restore; new runtime packages include it. Native source packages include
+aria2's exact archive and the build recipe.
+
+`Aria2DownloadTests` uses loopback fixtures with the real embedded library for
+parallel/range transfers, ignored ranges, cancellation, rejected/truncated replies,
+length validation and job-local cleanup. It is offline evidence. Run the mixed
+bulk UI live check with `ILLUCET_MIXED_BULK_ENGINE=aria2` and
+`ILLUCET_MIXED_BULK_MIN_ARIA_TRANSFERS` set to the expected direct-transfer count;
+the queue must retain its choice and diagnostics must prove actual execution.
+System Share Sheet tests use fixture extraction and check
+queue admission separately from actual transfer execution.
+
 ## Simulator regression
+
+The opt-in Reddit connection probes in `EmbeddedRuntimeTests` require
+`TEST_RUNNER_ILLUCET_REDDIT_LIVE=1`. They compare native networking with an isolated
+guest WebKit page and log status and media structure without transport URLs or
+cookies. `TEST_RUNNER_ILLUCET_REDDIT_SAMPLE_URL` can select another full post URL. Production
+download checks use the separate multi-site smoke test and its sample JSON.
 
 ```sh
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ILLUCET_SIMULATOR_ID=<simulator-uuid> Scripts/verify.sh simulator
@@ -71,6 +112,43 @@ presentation separately. The unit suite injects processing expiration to prove s
 checkpoint retention, not real OS continuation admission. Neither is device proof.
 
 ## Real download
+
+Multi-site verification is a separate explicit run of
+`DownloadCoordinatorTests/authorizedMultiSiteDownloadSmoke()` with
+`ILLUCET_MULTISITE_LIVE=1` and `ILLUCET_MULTISITE_LIVE_CONFIG_PATH` pointing to an
+untracked JSON array of `{site,url,engine,kind}` public samples. Optional
+`minimumAssets` checks the discovered inventory; `downloadAllAssets: true`
+downloads every matching asset, bounded to 24 per sample. It analyzes and
+downloads through the production coordinator, verifies regular nonempty output
+and actual media/image decoding, and reports typed site/engine failures without
+transport URLs. Use a separate result bundle; a fixture preview is not live proof.
+
+`BulkImportUITests/testAuthorizedMixedSiteBulkDownloads` is a separate normal-app
+live run on an isolated simulator. Set `ILLUCET_MIXED_BULK_LIVE=1`,
+`ILLUCET_MIXED_BULK_SAMPLES` to a private JSON array of `{site,url,kind}` public
+samples, `ILLUCET_MIXED_BULK_STATE` to that simulator's saved-state path, and
+`ILLUCET_MIXED_BULK_RECEIPT` to a private output JSON path.
+Start with an empty test queue, completed onboarding and charging-only disabled.
+It imports through the UI, verifies one durable mixed batch, decodes images and
+checks the videos' native probes. Decode the receipt's saved files separately
+with FFmpeg, since Automatic can preserve containers AVFoundation cannot read.
+Attachments capture input, admission, completion and history.
+The separate `RefinementUITests/testInstalledShortcutQueuesMixedSystemShare`
+requires `ILLUCET_SYSTEM_SHORTCUT_SMOKE=1` and the installed signed shortcut on
+the isolated iOS 27 simulator. It uses fixture extraction with a real system
+Share Sheet/Shortcut invocation to verify mixed queue admission and restoration.
+`EmbeddedRuntimeTests/authorizedExternalAssetRefresh()` is gated by
+`ILLUCET_ASSET_REFRESH_LIVE=1` and checks repeated public Vimeo asset refreshes.
+
+The authorized WebKit token check is
+`IllucetUITests/AccountSettingsUITests/testAuthorizedLocalTokenGenerator` with
+`ILLUCET_LOCAL_TOKEN_LIVE=1` set for the UI test runner. It generates tokens for
+two public videos and records initialization and subsequent mint times. An
+accepted media transfer is checked by
+`IllucetTests/DownloadCoordinatorTests/authorizedLocalProofTokenDownload()` with
+`ILLUCET_LOCAL_TOKEN_DOWNLOAD_LIVE=1` in the authorized live test configuration.
+The Debug diagnostic requests an optional token and verifies that YouTube serves
+media bytes to a request carrying it.
 
 ```sh
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ILLUCET_SIMULATOR_ID=<simulator-uuid> ILLUCET_AUTHORIZED_LIVE_TEST_CONFIG_PATH=<absolute-plist-path> Scripts/verify.sh live
@@ -230,7 +308,7 @@ separate from offline regression and requires exactly one executed passing live 
 
 Shortcut requests and legacy saved links retain the App Group
 `group.$(ILLUCET_BUNDLE_ID)`; device profiles must still authorize it.
-Settings → Shortcuts opens the signed bundled file directly in Add Shortcut. The two-action
+Settings → Sharing & Shortcuts opens the signed bundled file directly in Add Shortcut. The two-action
 wrapper in `Shortcuts/` extracts URLs and invokes `DownloadSharedLinkIntent`, with
 Open When Run disabled. All behavior and download choices live in Illucet.
 The legacy Open shared link intent remains compatible. The old Share extension
@@ -256,6 +334,12 @@ The wrapper targets `com.local.illucet`; builds with a different bundle identifi
 need a matching wrapper. Do not change signing just to satisfy this test.
 Live execution needs separate opt-in; offline admission fixtures prove queue
 ownership, not actual OS background scheduling.
+
+`RefinementUITests/testInstalledShortcutQueuesSystemShare` checks the installed
+Shortcut through the system Share Sheet with fixture media on an iOS 27 iPhone
+simulator. Install the bundled Shortcut first and set
+`TEST_RUNNER_ILLUCET_SYSTEM_SHORTCUT_SMOKE=1` for that isolated test. It completes
+Apple's data-sharing prompt and verifies a persisted job waiting for charging.
 
 ## PiP and identity checks
 
@@ -286,6 +370,9 @@ published release against its own checksum manifest without replacing its files;
 separate builds of the same source may have different archive hashes.
 An interrupted draft resumes only if its existing files match the supplied artifacts.
 Conflicts or incomplete published releases stop for review.
+
+Keep user-facing notes in `docs/releases/VERSION.md`. Publication uses that file
+for the matching tag, with the generic installation notes as a fallback.
 
 For a read-only check, use `python3 Scripts/publish-release.py --repo OWNER/REPO
 --tag vVERSION --expected-sha COMMIT --verify-existing`, with the full commit SHA

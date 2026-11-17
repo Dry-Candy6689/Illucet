@@ -49,7 +49,7 @@ struct SavedOutputAccessTests {
         #expect(migrated.history[0].outputReferences == migrated.jobs[0].outputReferences)
         #expect(migrated.history[0].id == snapshot.history[0].id)
         #expect(migrated.history[0].configuration == OutputCapabilityMatrix.normalized(snapshot.history[0].configuration))
-        #expect(migrated.applying(to: decoded).schemaVersion == 10)
+        #expect(migrated.applying(to: decoded).schemaVersion == IllucetSnapshot.currentSchemaVersion)
     }
 
     @Test

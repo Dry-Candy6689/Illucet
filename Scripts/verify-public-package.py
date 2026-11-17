@@ -49,6 +49,12 @@ def inspect_bytes(label: str, data: bytes, forbidden: list[str], allowlist: dict
 
 def inspect_payload(label: str, data: bytes, forbidden: list[str], allowlist: dict | None = None) -> list[str]:
     issues = inspect_bytes(label, data, forbidden, allowlist)
+    # Inspect actual bundled distribution metadata, including nested runtimes.
+    # Source archives may legitimately contain multiple license texts; those
+    # texts alone do not establish which code is linked into the application.
+    if label.endswith(".dist-info/METADATA") and re.search(
+            rb"(?im)^License(?:-Expression)?:[ \t]*GPL-2\.0-only[ \t]*\r?$", data):
+        issues.append(f"{label}: GPL-2.0-only runtime incompatible with application GPL-3.0")
     if label.casefold().endswith(PRIVATE_SUFFIXES):
         issues.append(f"{label}: personal signing material")
     if any(term.casefold() in label.casefold() for term in forbidden):
@@ -77,7 +83,8 @@ def main() -> int:
     if args.source:
         names = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root)
         paths.update(root / name.decode() for name in names.split(b"\0") if name)
-    for target in args.paths:
+    targets = [target.resolve() for target in args.paths]
+    for target in targets:
         paths.update(target.rglob("*") if target.is_dir() else [target])
     if not args.source and not args.paths:
         parser.error("select --source or a payload path")
@@ -88,7 +95,11 @@ def main() -> int:
             continue
         count += 1
         try:
-            label = str(path.relative_to(root)) if path.is_relative_to(root) else path.name
+            if path.is_relative_to(root):
+                label = str(path.relative_to(root))
+            else:
+                target = next((target for target in targets if target.is_dir() and path.is_relative_to(target)), None)
+                label = target.name + "/" + str(path.relative_to(target)) if target else path.name
             issues.extend(inspect_payload(label, path.read_bytes(), forbidden, allowlist))
         except OSError:
             issues.append(f"{path.name}: could not be inspected")

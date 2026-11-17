@@ -5,5 +5,6 @@
 #include "FFmpegBridge/IllucetFFmpegBridge.h"
 #include "NetworkBridge/IllucetHostResolver.h"
 #include "CryptoBridge/IllucetAES128CBC.h"
+#include "Aria2Bridge/IllucetAria2.h"
 
 #endif

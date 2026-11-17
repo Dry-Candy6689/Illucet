@@ -19,6 +19,9 @@ enum SharedLinkParser {
         return candidates.compactMap(canonicalURL).first
     }
     static func canonicalURL(_ url: URL) -> URL? {
+        if let site = MediaSite.recognize(url), site != .youtube {
+            return MediaSite.canonicalWebpage(url)
+        }
         guard url.absoluteString.utf8.count <= 4096, let c = URLComponents(url: url, resolvingAgainstBaseURL: false),
               ["http", "https"].contains(c.scheme?.lowercased() ?? ""), c.user == nil, c.password == nil,
               c.port == nil || c.port == 80 || c.port == 443, let host = c.host?.lowercased(),
@@ -111,5 +114,52 @@ struct SharedLinkInbox: Sendable {
             to: directory.appendingPathComponent(id.uuidString + ".json"),
             options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]
         )
+    }
+}
+
+struct SharedLinkBatch: Codable, Identifiable, Sendable {
+    let id: UUID
+    let urls: [URL]
+    let createdAt: Date
+    var presentedAt: Date? = nil
+}
+
+extension SharedLinkInbox {
+    private func batchDirectory() throws -> URL {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let root = try directory.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        guard root.isDirectory == true, root.isSymbolicLink != true else { throw CocoaError(.fileReadNoPermission) }
+        let batch = directory.appending(path: "Batches", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: batch, withIntermediateDirectories: true)
+        let values = try batch.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        guard values.isDirectory == true, values.isSymbolicLink != true else { throw CocoaError(.fileReadNoPermission) }
+        return batch
+    }
+    func saveBulk(_ urls: [URL], presented: Bool = false) throws -> SharedLinkBatch {
+        guard (2...500).contains(urls.count), urls.allSatisfy({ SharedLinkParser.canonicalURL($0) == $0 }) else { throw CocoaError(.fileWriteInvalidFileName) }
+        let pending = try pendingBatches()
+        if let existing = pending.first(where: { $0.urls == urls }) { return existing }
+        guard pending.count < 50 else { throw CocoaError(.fileWriteInvalidFileName) }
+        let batch = SharedLinkBatch(id: UUID(), urls: urls, createdAt: .now, presentedAt: presented ? .now : nil)
+        try JSONEncoder().encode(batch).write(to: batchDirectory().appending(path: batch.id.uuidString + ".json"),
+            options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        return batch
+    }
+    func pendingBatches() throws -> [SharedLinkBatch] {
+        let root = try batchDirectory()
+        return try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]).prefix(50).compactMap { file in
+            guard let values = try? file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]),
+                  values.isRegularFile == true, values.isSymbolicLink != true, (values.fileSize ?? Int.max) <= 2_100_000,
+                  let data = try? Data(contentsOf: file), let batch = try? JSONDecoder().decode(SharedLinkBatch.self, from: data),
+                  file.lastPathComponent == batch.id.uuidString + ".json", (2...500).contains(batch.urls.count),
+                  batch.urls.allSatisfy({ SharedLinkParser.canonicalURL($0) == $0 }) else { return nil }
+            return batch
+        }.sorted { $0.createdAt < $1.createdAt }
+    }
+    func removeBulk(_ id: UUID) throws { try FileManager.default.removeItem(at: batchDirectory().appending(path:id.uuidString + ".json")) }
+    func markBulkPresented(_ id: UUID) throws {
+        guard var batch = try pendingBatches().first(where: { $0.id == id }) else { return }
+        batch.presentedAt = .now
+        try JSONEncoder().encode(batch).write(to: batchDirectory().appending(path:id.uuidString + ".json"), options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
     }
 }

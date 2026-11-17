@@ -16,6 +16,11 @@ private final class MemoryAccountStorage: AccountSecureStorage, @unchecked Senda
     }
 }
 
+private actor AccountRequestTrace {
+    var requests: [String] = []
+    func append(_ request: String) { requests.append(request) }
+}
+
 @Suite("Secure account sessions")
 struct AccountStoreTests {
     private func cookies(_ value: String = "synthetic-session", expires: Int64? = nil) -> [YouTubeAccountCookie] {
@@ -136,5 +141,62 @@ struct AccountStoreTests {
         #expect(try await reopened.session(for: id) == cookies())
         try await reopened.remove(id)
         #expect(try await store.profiles().isEmpty)
+    }
+
+    @Test func automaticPublicDownloadNeverLoadsSavedCredentials() async throws {
+        // Corrupt/locked/removed account storage cannot prevent a guest download.
+        let store = AccountStore(storage: MemoryAccountStorage(data: Data("unavailable".utf8)))
+        let auth = AccountAuthentication(id: UUID(), store: store)
+        let result = try await auth.execute(requestJSON: #"{"action":"extract_metadata"}"#, policy: .automatic) { request in
+            #expect(!request.contains("cookies"))
+            return #"{"ok":true,"data":{}}"#
+        }
+        #expect(result.contains("true"))
+    }
+
+    @Test func automaticPrivateRetryUsesOnlyPreferredAccountOnce() async throws {
+        let store = AccountStore(storage: MemoryAccountStorage())
+        let first = try await store.add(name: "First", cookies: cookies("first-session"))
+        _ = try await store.add(name: "Second", cookies: cookies("second-session"))
+        let trace = AccountRequestTrace()
+        let response = try await AccountAuthentication(id: first, store: store).execute(requestJSON: "{}", policy: .automatic) { request in
+            await trace.append(request)
+            #expect(!request.contains("second-session"))
+            // The selected account also lacks access: preserve the private error.
+            return #"{"ok":false,"error":{"code":"private_media"}}"#
+        }
+        let requests = await trace.requests
+        #expect(requests.count == 2)
+        #expect(!requests[0].contains("first-session"))
+        #expect(requests[1].contains("first-session"))
+        #expect(response.contains("private_media"))
+        #expect(try await store.profiles().first?.expired == false)
+    }
+
+    @Test func guestOnlyNeverRetriesAndChallengesNeverUseAccounts() async throws {
+        let auth = AccountAuthentication(id: UUID(), store: AccountStore(storage: MemoryAccountStorage()))
+        for code in ["service_challenge", "regional_restriction", "http_error", "proof_token_required", "removed_media"] {
+            let result = try await auth.execute(requestJSON: "{}", policy: .automatic) { request in
+                #expect(!request.contains("cookies"))
+                return "{\"ok\":false,\"error\":{\"code\":\"\(code)\"}}"
+            }
+            #expect(result.contains(code))
+        }
+        let result = try await auth.execute(requestJSON: "{}", policy: .guestOnly) { _ in
+            #"{"ok":false,"error":{"code":"login_required"}}"#
+        }
+        #expect(result.contains("login_required"))
+    }
+
+    @Test func siteAccountLimitsAreIndependentAndSavedIsNotVerified() async throws {
+        let store = AccountStore(storage: MemoryAccountStorage())
+        for n in 1...10 { _ = try await store.add(name: "YouTube \(n)", cookies: cookies()) }
+        await #expect(throws: AccountError.limitReached) { try await store.add(name: "Extra", cookies: cookies()) }
+        let instagram = [YouTubeAccountCookie(domain: ".instagram.com", path: "/", name: "sessionid", value: "synthetic", secure: true, expires: nil)]
+        let id = try await store.add(name: "Instagram", cookies: instagram, site: .instagram)
+        #expect(try await store.profiles().first(where: { $0.id == id })?.verified == false)
+        try await store.markVerified(id)
+        #expect(try await store.profiles().first(where: { $0.id == id })?.verified == true)
+        await #expect(throws: AccountError.invalidSession) { try await store.session(for: id, site: .youtube) }
     }
 }

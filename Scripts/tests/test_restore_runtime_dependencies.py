@@ -72,6 +72,24 @@ class RuntimeArchiveTests(unittest.TestCase):
                 module.restore(source, root)
             self.assertEqual((existing / "sentinel").read_text(), "keep")
 
+    def test_legacy_archive_preserves_the_separately_built_aria2_runtime(self):
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work)
+            archive_path = root / "legacy.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                for component in module.ALLOWED:
+                    if component.endswith("IllucetAria2.xcframework"):
+                        continue
+                    required = "yt_dlp/version.py" if component.endswith("PythonPackages") else "Info.plist"
+                    archive.writestr(component + "/" + required, b"fixture")
+            (root / "Config").mkdir()
+            (root / "Config/RuntimeRelease.json").write_text(json.dumps({"sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest()}))
+            aria2 = root / "Vendor/Frameworks/IllucetAria2.xcframework"
+            aria2.mkdir(parents=True)
+            (aria2 / "Info.plist").write_bytes(b"already verified")
+            module.restore(archive_path, root)
+            self.assertEqual((aria2 / "Info.plist").read_bytes(), b"already verified")
+
 
 if __name__ == "__main__":
     unittest.main()

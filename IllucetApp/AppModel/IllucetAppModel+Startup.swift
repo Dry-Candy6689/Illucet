@@ -146,6 +146,18 @@ extension IllucetAppModel {
                     metadata: fixtureMetadata
                 )
                 switch screenArgument {
+                case "bulk-import":
+                    openBulkImport(text: "A few favourites:\nhttps://youtu.be/dQw4w9WgXcQ\nhttps://www.tiktok.com/@sample/video/123456\nhttps://www.instagram.com/p/SamplePost/\nhttps://x.com/sample/status/123456\nhttps://www.reddit.com/r/sample/comments/abc123/example/\nhttps://youtu.be/dQw4w9WgXcQ\nhttps://example.com/article")
+                case "bulk-items":
+                    openBulkImport()
+                    bulkImportStep = .items
+                    bulkAssets = ([DeveloperFixtures.media] + DeveloperFixtures.externalAssets).map { metadata in
+                        .init(id: metadata.sourceIdentity?.archiveID ?? "youtube:\(metadata.videoID)", metadata: metadata,
+                              configuration: configurationForImportedMedia(metadata, preferences: .init()))
+                    }
+                case "engines":
+                    selectedTab = .settings
+                    settingsNavigationPath = [.engines]
                 case "shortcut-handoff":
                     settings.shortcuts = .init(behavior: .ask)
                     URLText = ""

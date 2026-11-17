@@ -22,6 +22,7 @@ env DEVELOPER_DIR="${DEVELOPER_DIR}" \
     -project "${PROJECT_DIR}/IllucetApp.xcodeproj" \
     -scheme Illucet \
     -configuration Release \
+    ENABLE_CODE_COVERAGE=NO \
     -destination 'generic/platform=iOS' \
     -derivedDataPath "${DEVICE_DERIVED_DATA}" \
     DEVELOPMENT_TEAM='' \
@@ -46,6 +47,7 @@ env DEVELOPER_DIR="${DEVELOPER_DIR}" \
     -project "${PROJECT_DIR}/IllucetApp.xcodeproj" \
     -scheme Illucet \
     -configuration Release \
+    ENABLE_CODE_COVERAGE=NO \
     -destination 'generic/platform=iOS Simulator' \
     -derivedDataPath "${SIMULATOR_DERIVED_DATA}" \
     DEVELOPMENT_TEAM='' \
@@ -59,6 +61,9 @@ if [[ ! -x "${SIMULATOR_APP}/Illucet" ]]; then
     echo "Expected simulator application was not produced at ${SIMULATOR_APP}" >&2
     exit 1
 fi
+
+python3 "${PROJECT_DIR}/Scripts/verify-runtime-licenses.py" --bundle "${DEVICE_APP}"
+python3 "${PROJECT_DIR}/Scripts/verify-runtime-licenses.py" --bundle "${SIMULATOR_APP}"
 
 /bin/rm -rf -- "${OUTPUT_DIR}/Illucet.app" "${OUTPUT_DIR}/IllucetApp.xcodeproj"
 /usr/bin/ditto "${DEVICE_APP}" "${OUTPUT_DIR}/Illucet.app"

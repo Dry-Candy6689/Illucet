@@ -3,6 +3,18 @@ import Testing
 @testable import Illucet
 
 struct ShortcutDownloadTests {
+    @Test func flattenedShareURLListRetainsEverySupportedSite() throws {
+        let urls = [DeveloperFixtures.RickURL,
+            URL(string: "https://www.instagram.com/p/SamplePost/")!,
+            URL(string: "https://www.tiktok.com/@sample/video/123456")!]
+        let flattened = try #require(URL(string: urls.map(\.absoluteString).joined(separator: "\n")))
+        #expect(DownloadSharedLinkIntent.canonicalLinks([flattened]) == urls)
+        let commaSeparated = try #require(URL(string: urls.map(\.absoluteString).joined(separator: ", ")))
+        #expect(DownloadSharedLinkIntent.canonicalLinks([commaSeparated]) == urls)
+        #expect(DownloadSharedLinkIntent.canonicalLinks(urls + [urls[0]]) == urls)
+        let credentials = try #require(URL(string: "https://user:secret@www.instagram.com/p/private/\n" + urls[0].absoluteString))
+        #expect(DownloadSharedLinkIntent.canonicalLinks([credentials]) == [urls[0]])
+    }
     @Test func admissionMessageReportsFailurePauseAndRetryTruthfully() {
         var job = DeveloperFixtures.failedThumbnailOnlyJob
         #expect(DownloadSharedLinkIntent.admissionMessage(job) == "Download failed — open Illucet for details")
@@ -61,6 +73,48 @@ struct ShortcutDownloadTests {
         try inbox.markPresented(request.id)
         #expect(try inbox.pending().first?.presentedAt != nil)
         #expect(try inbox.pending().count == 1)
+    }
+
+    @Test @MainActor func mixedSharedLinksAdmitOnceAndPreserveDraft() async throws {
+        let root = temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let inbox = SharedLinkInbox(directory: root.appendingPathComponent("inbox"))
+        let image = try #require(DeveloperFixtures.externalAssets.first { $0.sourceIdentity?.site == .instagram })
+        let urls = [DeveloperFixtures.RickURL, image.canonicalURL]
+        let request = try inbox.saveBulk(urls, presented: true)
+        #expect(try inbox.saveBulk(urls, presented: true).id == request.id)
+        #expect(try inbox.pendingBatches().count == 1)
+        let model = makeModel(root)
+        try await model.waitForShortcutStartup()
+        model.settings.defaultDestination = .appDocuments
+        model.settings.waitForCharging = true
+        model.URLText = "unfinished draft"
+        let first = try await model.submitShortcutBatch(urls, id: request.id, preferences: .init())
+        let second = try await model.submitShortcutBatch(urls, id: request.id, preferences: .init())
+        #expect(first.id == request.id && second.id == first.id)
+        #expect(first.items.count == 2)
+        #expect(first.continueOnError)
+        #expect(model.batches.filter { $0.id == request.id }.count == 1)
+        #expect(model.URLText == "unfinished draft")
+        model.saveTask?.cancel()
+    }
+
+    @Test @MainActor func importedBatchRetainsStopOnError() async throws {
+        let root = temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let model = makeModel(root)
+        try await model.waitForShortcutStartup()
+        model.settings.waitForCharging = true
+        let media = DeveloperFixtures.media
+        let item = BulkMediaItem(id: media.videoID, metadata: media,
+            configuration: model.configurationForImportedMedia(media, preferences: .init()))
+        var base = model.settings.configuration()
+        base.continuePlaylistOnError = false
+        await model.coordinator.configure(settings: model.settings, folderBookmark: nil)
+        let batch = try await model.enqueueImportedBatch([item], baseConfiguration: base,
+            title: "Imported media", admissionID: UUID(), skipArchived: false)
+        #expect(!batch.continueOnError)
+        model.saveTask?.cancel()
     }
 
     @Test @MainActor func admittedRequestPersistsOnceKeepsDraftAndHonorsCharging() async throws {

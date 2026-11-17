@@ -3,6 +3,7 @@
 
 #include "IllucetPythonBridge.h"
 #include "../JavaScriptBridge/IllucetQuickJSBridge.h"
+#include "../JavaScriptBridge/IllucetWebKitBridge.h"
 
 #include <ctype.h>
 #include <pthread.h>
@@ -300,7 +301,30 @@ static PyObject *illucet_native_quickjs_evaluate(
     return python_output;
 }
 
+static PyObject *illucet_native_webkit_evaluate(PyObject *self, PyObject *args) {
+    (void)self;
+    const char *source = NULL;
+    Py_ssize_t length = 0;
+    unsigned int timeout = 30000;
+    unsigned long long limit = 8ULL * 1024ULL * 1024ULL;
+    if (!PyArg_ParseTuple(args, "s#|IK:webkit_evaluate", &source, &length, &timeout, &limit)) return NULL;
+    char *output = NULL, *error = NULL;
+    size_t output_length = 0;
+    int32_t status = illucet_webkit_evaluate(source, (size_t)length, timeout, (size_t)limit,
+        illucet_quickjs_is_cancelled, illucet_current_job, &output, &output_length, &error);
+    if (status != ILLUCET_QUICKJS_OK) {
+        PyObject *type = status == ILLUCET_QUICKJS_TIMEOUT ? PyExc_TimeoutError :
+            status == ILLUCET_QUICKJS_CANCELLED ? PyExc_InterruptedError :
+            status == ILLUCET_QUICKJS_OUTPUT_LIMIT ? PyExc_OverflowError : PyExc_RuntimeError;
+        PyErr_SetString(type, error ? error : "WebKit evaluation failed.");
+        free(output); free(error); return NULL;
+    }
+    PyObject *result = PyUnicode_FromStringAndSize(output ? output : "", output_length);
+    free(output); free(error); return result;
+}
+
 static PyMethodDef illucet_native_methods[] = {
+    {"webkit_evaluate", illucet_native_webkit_evaluate, METH_VARARGS, "Evaluate an isolated bounded WebKit challenge."},
     {
         "emit_json",
         illucet_native_emit_json,

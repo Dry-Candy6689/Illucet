@@ -271,10 +271,12 @@ final class YTDLPStreamResolver:
 
     private let python: PythonEngine
     private let authentication: AccountAuthentication?
+    private let preferences: EnginePreferences?
 
-    init(python: PythonEngine, authentication: AccountAuthentication? = nil) {
+    init(python: PythonEngine, authentication: AccountAuthentication? = nil, preferences: EnginePreferences? = nil) {
         self.python = python
         self.authentication = authentication
+        self.preferences = preferences
     }
 
     func resolve(
@@ -309,7 +311,7 @@ final class YTDLPStreamResolver:
         do {
             response = try await python.executeAuthenticated(
                 requestID: PythonRequestIDAllocator.next(),
-                requestJSON: JSON, authentication: authentication
+                requestJSON: JSON, authentication: authentication, preferences: preferences
             )
         } catch let error as AccountError {
             throw error
@@ -348,7 +350,7 @@ final class YTDLPStreamResolver:
         do {
             response = try await python.executeAuthenticated(
                 requestID: PythonRequestIDAllocator.next(),
-                requestJSON: JSON, authentication: authentication
+                requestJSON: JSON, authentication: authentication, preferences: preferences
             )
         } catch let error as AccountError {
             throw error

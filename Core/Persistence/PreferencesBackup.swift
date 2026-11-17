@@ -15,6 +15,7 @@ struct PreferencesBackup: Codable, Equatable, Sendable {
         version = Self.currentVersion
         self.settings = settings
         self.settings.clipboard?.explained = false
+        Self.removeDeviceAccountChoices(from: &self.settings)
         self.presets = presets.map(Self.portablePreset)
     }
 
@@ -40,6 +41,7 @@ struct PreferencesBackup: Codable, Equatable, Sendable {
         var backup = try JSONDecoder.illucetDecoder.decode(Self.self, from: JSONSerialization.data(withJSONObject: object))
         try backup.validate()
         backup.settings = OutputCapabilityMatrix.normalized(backup.settings)
+        removeDeviceAccountChoices(from: &backup.settings)
         backup.presets = QuickStartPresetLibrary.normalized(backup.presets.map(portablePreset))
         QuickStartPresetLibrary.migrateLaunchBehavior(settings: &backup.settings, presets: &backup.presets)
         if let preferred = backup.settings.shortcuts?.preferredPresetID,
@@ -56,7 +58,22 @@ struct PreferencesBackup: Codable, Equatable, Sendable {
     private static func portablePreset(_ preset: QuickStartPreset) -> QuickStartPreset {
         var result = preset
         result.configuration.accountID = nil
+        if result.configuration.enginePreferences?.accountAccess == .selectedAccount {
+            result.configuration.enginePreferences?.accountAccess = .automatic
+        }
+        result.configuration.sourceIdentity = nil
+        result.configuration.assetFingerprint = nil
         return result
+    }
+
+    private static func removeDeviceAccountChoices(from settings: inout AppSettings) {
+        if settings.engines?.accountAccess == .selectedAccount { settings.engines?.accountAccess = .automatic }
+        settings.siteDefaults = settings.siteDefaults?.mapValues { value in
+            var copy = value
+            copy.accountID = nil
+            if copy.accountAccess == .selectedAccount { copy.accountAccess = .automatic }
+            return copy
+        }
     }
 
     private func validate() throws {

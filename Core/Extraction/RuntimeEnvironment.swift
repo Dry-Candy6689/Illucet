@@ -7,7 +7,7 @@ actor RuntimeEnvironment {
     private var playlistAnalyzerEngine: YTDLPPlaylistAnalyzer?
     private var resolverEngine: YTDLPStreamResolver?
     private var hlsPlaylistResolverEngine: YTDLPHLSPlaylistResolver?
-    private let recorder = PythonEventRecorder()
+    let recorder = PythonEventRecorder()
     private let packageStore: ExtractorPackageStore
     private var startupTask: Task<RuntimeStartup, Error>?
     private var activeManifest: ExtractorPackageManifest?
@@ -98,7 +98,11 @@ actor RuntimeEnvironment {
          "path": archive.fileURL.path, "format": archive.format.rawValue]
     }
 
-    func extractor(accountID: UUID? = nil) async throws -> YTDLPExtractorEngine {
+    func extractor(accountID: UUID? = nil, preferences: EnginePreferences? = nil) async throws -> YTDLPExtractorEngine {
+        if let preferences {
+            let authentication = accountID.map { AccountAuthentication(id: $0, store: accounts) }
+            return YTDLPExtractorEngine(python: try await startedPython(), contract: activeContract, authentication: authentication, preferences: preferences)
+        }
         if let accountID {
             _ = try await accounts.session(for: accountID)
             let engine = try await startedPython()
@@ -114,7 +118,10 @@ actor RuntimeEnvironment {
         return extractor
     }
 
-    func resolver(accountID: UUID? = nil) async throws -> YTDLPStreamResolver {
+    func resolver(accountID: UUID? = nil, preferences: EnginePreferences? = nil) async throws -> YTDLPStreamResolver {
+        if let preferences {
+            return YTDLPStreamResolver(python: try await startedPython(), authentication: accountID.map { AccountAuthentication(id: $0, store: accounts) }, preferences: preferences)
+        }
         if let accountID {
             _ = try await accounts.session(for: accountID)
             let engine = try await startedPython()
@@ -130,18 +137,17 @@ actor RuntimeEnvironment {
         return resolver
     }
 
-    func playlistAnalyzer(accountID: UUID? = nil) async throws -> YTDLPPlaylistAnalyzer {
-        if let accountID {
-            _ = try await accounts.session(for: accountID)
+    func playlistAnalyzer(accountID: UUID? = nil, preferences: EnginePreferences = .init()) async throws -> YTDLPPlaylistAnalyzer {
+        if accountID != nil || preferences != .init() {
             let engine = try await startedPython()
-            let authentication = AccountAuthentication(id: accountID, store: accounts)
-            return YTDLPPlaylistAnalyzer(python: engine, authentication: authentication)
+            let authentication = accountID.map { AccountAuthentication(id: $0, store: accounts) }
+            return YTDLPPlaylistAnalyzer(python: engine, authentication: authentication, preferences: preferences)
         }
         if let playlistAnalyzerEngine {
             return playlistAnalyzerEngine
         }
         let engine = try await startedPython()
-        let analyzer = YTDLPPlaylistAnalyzer(python: engine)
+        let analyzer = YTDLPPlaylistAnalyzer(python: engine, preferences: preferences)
         playlistAnalyzerEngine = analyzer
         return analyzer
     }
@@ -173,7 +179,7 @@ actor RuntimeEnvironment {
         hlsPlaylistResolverEngine = nil
     }
 
-    private func startedPython() async throws -> PythonEngine {
+    func startedPython() async throws -> PythonEngine {
         if let python {
             return python
         }

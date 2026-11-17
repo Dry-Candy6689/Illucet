@@ -32,14 +32,14 @@ enum PlaylistChildJobFactoryError: LocalizedError, Equatable, Sendable {
 }
 
 actor PlaylistChildJobFactory {
-    private let loadMetadata: @Sendable (URL, UUID?) async throws -> MediaMetadata
+    private let loadMetadata: @Sendable (URL, UUID?, DownloadConfiguration) async throws -> MediaMetadata
     private let enqueue: PlaylistChildJobEnqueuer
 
     init(
         loadMetadata: @escaping PlaylistItemMetadataLoader,
         enqueue: @escaping PlaylistChildJobEnqueuer
     ) {
-        self.loadMetadata = { url, accountID in
+        self.loadMetadata = { url, accountID, _ in
             guard accountID == nil else { throw AccountError.unavailable }
             return try await loadMetadata(url)
         }
@@ -48,7 +48,13 @@ actor PlaylistChildJobFactory {
 
     init(loadAccountMetadata: @escaping @Sendable (URL, UUID?) async throws -> MediaMetadata,
          enqueue: @escaping PlaylistChildJobEnqueuer) {
-        self.loadMetadata = loadAccountMetadata
+        self.loadMetadata = { url, accountID, _ in try await loadAccountMetadata(url, accountID) }
+        self.enqueue = enqueue
+    }
+
+    init(loadSourceMetadata: @escaping @Sendable (URL, UUID?, DownloadConfiguration) async throws -> MediaMetadata,
+         enqueue: @escaping PlaylistChildJobEnqueuer) {
+        self.loadMetadata = loadSourceMetadata
         self.enqueue = enqueue
     }
 
@@ -70,8 +76,9 @@ actor PlaylistChildJobFactory {
         }
 
         try Task.checkCancellation()
-        let accountID = batch.configuration.accountID
-        let metadata = try await loadMetadata(sourceURL, accountID)
+        let selectedConfiguration = batch.itemOverrides[entry.id] ?? batch.configuration
+        let accountID = selectedConfiguration.accountID
+        let metadata = try await loadMetadata(sourceURL, accountID, selectedConfiguration)
         try Task.checkCancellation()
         guard metadata.videoID == expectedVideoID else {
             throw PlaylistChildJobFactoryError.identityMismatch(
@@ -84,8 +91,10 @@ actor PlaylistChildJobFactory {
         var configuration =
             batch.itemOverrides[entry.id] ?? batch.configuration
         configuration.accountID = accountID
-        configuration.selectedVideoFormatID = nil
-        configuration.selectedAudioFormatID = nil
+        if batch.kind != .importedLinks {
+            configuration.selectedVideoFormatID = nil
+            configuration.selectedAudioFormatID = nil
+        }
         configuration.playlistBehavior = .referencedVideo
         configuration.filenameTemplate = Self.specializedFilenameTemplate(
             configuration.filenameTemplate,

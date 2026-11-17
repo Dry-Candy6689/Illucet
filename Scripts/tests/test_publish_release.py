@@ -81,6 +81,17 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(api.mutations, ['create', *[('upload', n) for n in publisher.ASSETS], 'publish'])
         self.assertEqual(api.data, self.data)
 
+    def test_release_creation_uses_versioned_notes_when_present(self):
+        root = self.directory / 'repository'
+        notes = root / 'docs' / 'releases' / '1.1.0.md'
+        notes.parent.mkdir(parents=True)
+        notes.write_text('Release changes\n\nInstallation requirements.\n')
+        api = publisher.GitHub('example/Illucet')
+        with patch.object(publisher, '__file__', str(root / 'Scripts' / 'publish-release.py')), patch.object(api, 'command') as command:
+            api.create('v1.1.0')
+        command.assert_called_once_with('release', 'create', 'v1.1.0', '--verify-tag', '--draft',
+                                        '--title', 'Illucet 1.1.0', '--notes-file', str(notes.resolve()))
+
     def test_repeat_published_release_is_read_only(self):
         api = FakeGitHub(self.data)
         self.assertIn('Already published', self.run_publish(api))

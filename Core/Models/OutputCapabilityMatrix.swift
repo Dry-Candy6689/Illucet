@@ -403,6 +403,14 @@ enum OutputCapabilityMatrix {
         _ configuration: DownloadConfiguration,
         metadata: MediaMetadata
     ) throws {
+        if metadata.sourceIdentity?.kind == .image {
+            guard configuration.sourceIdentity == metadata.sourceIdentity,
+                  configuration.bundleStyle == .mediaOnly,
+                  !configuration.isSubtitlesOnly,
+                  configuration.selectedVideoFormatID == nil,
+                  configuration.selectedAudioFormatID == nil else { throw OutputCompatibilityError.unsupportedConfiguration }
+            return
+        }
         if !(configuration.metadataSidecars ?? []).isEmpty {
             guard [.appDocuments, .filesFolder].contains(configuration.destination),
                   configuration.bundleStyle == .mediaOnly,

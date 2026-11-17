@@ -99,7 +99,7 @@ final class RefinementUITests: XCTestCase {
 
     func testShortcutButtonOpensAddShortcutInsteadOfSharing() {
         let app = launch("download")
-        settings("Shortcuts", app: app)
+        settings("Sharing & Shortcuts", app: app)
         app.buttons["shortcuts.install"].tap()
         let shortcuts = XCUIApplication(bundleIdentifier: "com.apple.shortcuts")
         XCTAssertTrue(shortcuts.wait(for: .runningForeground, timeout: 10))
@@ -108,4 +108,78 @@ final class RefinementUITests: XCTestCase {
         shortcuts.buttons["Cancel"].firstMatch.tap()
         app.activate()
     }
+
+    #if targetEnvironment(simulator)
+    func testInstalledShortcutQueuesSystemShare() throws {
+        try runInstalledShortcutSystemShare(mixed: false)
+    }
+    func testInstalledShortcutQueuesMixedSystemShare() throws {
+        try runInstalledShortcutSystemShare(mixed: true)
+    }
+    func testInstalledShortcutQueuesMixedSystemShareAria2() throws {
+        try runInstalledShortcutSystemShare(mixed: true, aria2: true)
+    }
+    private func runInstalledShortcutSystemShare(mixed: Bool, aria2: Bool = false) throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["ILLUCET_SYSTEM_SHORTCUT_SMOKE"] == "1")
+        let app = launch("download")
+        if aria2 {
+            settings("Engines & compatibility", app: app)
+            app.buttons["engines.download"].tap()
+            app.buttons["aria2"].firstMatch.tap()
+            capture(app, "aria2 selected for system sharing")
+            app.navigationBars.buttons.firstMatch.tap()
+        }
+        settings("Download defaults", app: app)
+        let charging = scrollUntilHittable("Start when charging", type: .switch, in: app)
+        if charging.value as? String == "0" { charging.switches.firstMatch.tap() }
+        XCTAssertEqual(charging.value as? String, "1")
+        app.launchArguments = ["--ui-testing", "--shared-link-proof"]
+        if mixed { app.launchArguments.append("--shared-mixed-proof") }
+        if aria2 { app.launchArguments.append("--shared-aria2-proof") }
+        app.launch()
+        app.buttons["shareProof.present"].tap()
+        let action = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Download with Illucet")).firstMatch
+        for _ in 0..<4 where !action.isHittable { app.swipeUp() }
+        capture(app, mixed ? "Before - Share mixed links" : "System Share Sheet actions")
+        if action.isHittable {
+            // iOS 27's remote action cell includes its caption below the icon.
+            // Target the visible icon rather than the cell's activation point.
+            let frame = action.frame
+            let origin = app.frame.origin
+            app.coordinate(withNormalizedOffset: .zero).withOffset(.init(
+                dx: frame.midX - origin.x, dy: frame.minY + frame.width * 0.6 - origin.y)).tap()
+        } else {
+            // The simulator's remote share sheet exposes only its container.
+            // This smoke check uses the expanded iOS 27 iPhone share sheet
+            // with the signed shortcut installed on the test simulator.
+            app.coordinate(withNormalizedOffset: .init(dx: 0.614, dy: 0.394)).tap()
+        }
+        let allow = app.buttons["Allow"].firstMatch
+        let systemAllow = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow"].firstMatch
+        if allow.waitForExistence(timeout: 5) { allow.tap() }
+        let check = app.buttons["shareProof.checkDownload"]
+        let deadline = Date().addingTimeInterval(40)
+        while Date() < deadline {
+            if allow.exists { allow.tap() }
+            if systemAllow.exists { systemAllow.tap() }
+            if check.isHittable { check.tap() }
+            if app.staticTexts[mixed ? "Mixed shared downloads queued: 3" : "Shared download queued"].waitForExistence(timeout: 1) { break }
+        }
+        capture(app, "System Shortcut invocation")
+        XCTAssertTrue(app.staticTexts[mixed ? "Mixed shared downloads queued: 3" : "Shared download queued"].exists)
+
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        selectWorkspaceTab("Queue", in: app)
+        let waiting = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Waiting for charging")).firstMatch
+        let queued = waiting.waitForExistence(timeout: 12)
+        if mixed {
+            for id in ["youtube:dQw4w9WgXcQ", "instagram:SamplePost:image:SamplePost", "tiktok:123456:video:123456"] {
+                XCTAssertTrue(app.descendants(matching: .any)["queue.batch.item.\(id)"].firstMatch.exists)
+            }
+        }
+        capture(app, mixed ? "After - Share mixed links queued" : "System Share Sheet shortcut queued a download")
+        XCTAssertTrue(queued)
+    }
+    #endif
 }

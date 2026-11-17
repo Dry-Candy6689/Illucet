@@ -13,11 +13,15 @@ struct SettingsView: View {
                 ScrollViewReader { pipScroll in
                 List {
                     Section("Accounts") {
-                        NavigationLink(value: SettingsDestination.accounts) { settingsRow("YouTube accounts", "", "person.crop.circle.fill", .blue) }
+                        NavigationLink(value: SettingsDestination.accounts) { settingsRow("Accounts", "Guest-first access and saved sessions", "person.crop.circle.fill", .blue) }
+                            .accessibilityIdentifier("settings.accounts")
                     }
                     .id("settings.root.top")
 
                     Section("Downloads") {
+                        NavigationLink(value: SettingsDestination.engines) {
+                            settingsRow("Engines & compatibility", "Download engines and per-site defaults", "gearshape.2.fill", .blue)
+                        }
                         NavigationLink(value: SettingsDestination.downloads) {
                             settingsRow(
                                 "Download defaults",
@@ -49,7 +53,8 @@ struct SettingsView: View {
                         NavigationLink(value: SettingsDestination.homeQuickStart) { settingsRow("Home Quick Start", "", "bolt.fill", IllucetTheme.warning) }
                             .id(PipAnchor.homeQuickStartRow)
                             .pipAnchor(.homeQuickStartRow)
-                        NavigationLink(value: SettingsDestination.links) { settingsRow("Shortcuts", "", "square.and.arrow.up.fill", .blue) }
+                        NavigationLink(value: SettingsDestination.links) { settingsRow("Sharing & Shortcuts", "", "square.and.arrow.up.fill", .blue) }
+                            .accessibilityIdentifier("settings.sharing")
                     }
 
                     Section("Experience") {
@@ -133,6 +138,7 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationDestination(for: SettingsDestination.self) { destination in
                 switch destination {
+                case .engines: EngineSettingsView()
                 case .accounts: AccountSettingsView()
                 case .downloads: DownloadDefaultsView()
                 case .conversion: ConversionDefaultsView()
@@ -195,6 +201,7 @@ struct SettingsView: View {
 
 // A selected Settings tab returns to its root without reconstructing the app model.
 enum SettingsDestination: Hashable {
+    case engines
     case accounts, downloads, conversion, sponsorBlock, links, clipboard, homeQuickStart
     case appearance, pip, notifications, storage, updates, licenses, preferences
 }

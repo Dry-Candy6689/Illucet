@@ -20,6 +20,11 @@ struct DownloadView: View {
                             URLCard
                                 .pipAnchor(.link)
                                 .id(DownloadFocusTarget.mediaLink)
+                            if let text = model.clipboardBulkSuggestion {
+                                Button { model.clipboardBulkSuggestion = nil; model.openBulkImport(text: text) } label: {
+                                    Label("Review clipboard links", systemImage: "text.badge.plus")
+                                }.illucetCard()
+                            }
                             if let suggestion = model.clipboardSuggestion {
                                 VStack(alignment: .leading) {
                                     Text("Clipboard link available").font(.headline)
@@ -45,6 +50,9 @@ struct DownloadView: View {
                                         }.padding(.vertical, 4)
                                     }
                                 }.illucetCard()
+                            }
+                            ForEach(model.savedLinkBatches) { batch in
+                                Button("Review \(batch.urls.count) shared links") { model.openSharedBatch(batch) }.illucetCard()
                             }
                             AccountSelectionView()
                             quickPresets
@@ -100,6 +108,9 @@ struct DownloadView: View {
             }
             .sheet(isPresented: $model.presentsSharedLinkChoice) {
                 SharedLinkChoiceView().environmentObject(model)
+            }
+            .sheet(isPresented: $model.presentsBulkImport) {
+                BulkImportView().environmentObject(model)
             }
             .navigationTitle(AppIdentity.displayName)
             .navigationBarTitleDisplayMode(.inline)
@@ -158,18 +169,37 @@ struct DownloadView: View {
 
     private var URLCard: some View {
         VStack(alignment: .leading, spacing: 15) {
-            IllucetSectionHeader(
-                title: "Start with a link",
-                subtitle: "A video, a track, or a whole playlist",
-                systemImage: "link"
-            )
+            let headerLayout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+                : AnyLayout(HStackLayout(alignment: .top, spacing: 8))
+            headerLayout {
+                IllucetSectionHeader(
+                    title: "Start with a link",
+                    subtitle: "Videos, tracks, images, or playlists",
+                    systemImage: "link"
+                )
+                Button {
+                    model.openBulkImport()
+                    URLFieldFocused = false
+                } label: {
+                    Label("Bulk import", systemImage: "text.badge.plus")
+                        .font(.caption.weight(.semibold))
+                        .fixedSize(horizontal: true, vertical: false)
+                        .padding(.horizontal, 10)
+                        .frame(minHeight: 44)
+                        .background(theme.input, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(theme.foregroundAccent)
+                .accessibilityIdentifier("download.bulkImport")
+            }
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: "globe")
                     .foregroundStyle(.secondary)
                     .padding(.top, 13)
                     .accessibilityHidden(true)
                 TextField(
-                    "https://youtu.be/…",
+                    "Paste a media link…",
                     text: Binding(get: { model.URLText }, set: model.editURLField),
                     axis: .vertical
                 )

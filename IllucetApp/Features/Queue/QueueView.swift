@@ -9,6 +9,7 @@ private enum QueueDisplayOrder: String, CaseIterable, Identifiable {
 struct QueueView: View {
     @EnvironmentObject private var model: IllucetAppModel
     @State private var confirmsCancelAll = false
+    @State private var exportingFailedLinks = false
 
     @State private var confirmsDeletion = false
     @State private var deleting = false
@@ -91,6 +92,8 @@ struct QueueView: View {
                 if !model.batches.isEmpty || !unbatchedJobs.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
+                            Button { exportingFailedLinks = true } label: { Label("Export failed links", systemImage: "doc.text") }
+                                .disabled(FailedLinkExport(jobs:model.jobs,batches:model.batches).text.isEmpty)
                             Picker("Sort queue", selection: $displayOrder) {
                                 ForEach(QueueDisplayOrder.allCases) { order in
                                     brandedText(order.rawValue).tag(order)
@@ -148,6 +151,9 @@ struct QueueView: View {
                     model.cancelAll()
                 }
                 Button("Keep downloading", role: .cancel) {}
+            }
+            .fileExporter(isPresented: $exportingFailedLinks, document: FailedLinkExport(jobs:model.jobs,batches:model.batches), contentType: .plainText, defaultFilename: "Illucet failed links") { result in
+                if case .failure = result { model.alert = AppAlert(title: "Couldn’t export links", message: "Try saving the link list again.") }
             }
         }
     }
@@ -360,7 +366,7 @@ struct QueueJobCard: View {
                         Label(
                             job.stage.isProcessingWork
                                 ? "Processing can’t pause"
-                                : job.stage.rawValue,
+                                : job.displayStage,
                             systemImage: "hourglass"
                         )
                         .font(.caption.weight(.semibold))
@@ -621,7 +627,7 @@ struct JobDetailView: View {
                     Label(
                         current.stage.isProcessingWork
                             ? "Processing can’t pause"
-                            : current.stage.rawValue,
+                            : current.displayStage,
                         systemImage: "hourglass"
                     )
                     .font(.subheadline.weight(.semibold))

@@ -420,7 +420,7 @@ extension IllucetAppModel {
         sponsorBlockPreviewTask?.cancel()
         sponsorBlockPreviewTask = nil
         var policy = configuration.sponsorBlock
-        guard configuration.hasMediaTimeline, let metadata = analyzedMetadata,
+        guard configuration.hasMediaTimeline, let metadata = analyzedMetadata, metadata.sourceIdentity == nil,
               policy.needsSegmentReview
         else {
             sponsorBlockPreviewState = .idle

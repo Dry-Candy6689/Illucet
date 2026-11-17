@@ -1,4 +1,11 @@
 {
+  "PythonApp/_image_packages/charset_normalizer-3.5.2.dist-info/METADATA": {
+    "sha256": "89ce6362bb7be88558f4be99a98f5d1b4da93d19cd0323e5ee0bac05cf883dfb",
+    "rules": [
+      "personal home path"
+    ],
+    "reason": "Unmodified official wheel documentation contains a public sample-document path; this is not an application owner's path."
+  },
   "PythonPackages/yt_dlp/extractor/cybrary.py": {
     "sha256": "a12957ab0d90ce1bb75b2eeeb73127f86ade083e61eca27f283718cac31399aa",
     "rules": [
@@ -47,5 +54,33 @@
       "local denylist match"
     ],
     "reason": "Public upstream service credentials or sample names; exact file verified against the pinned official yt-dlp wheel."
+  },
+  "illucet-token.js": {
+    "sha256": "f4e1746a3e4196760948e63cd32cc3cf6bdbb73ec5bd152555ba574bd7c03a81",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public Google web-client API key from the verified BgUtils 4.0.3 MIT package."
+  },
+  "TokenProvider/upstream/README.md": {
+    "sha256": "81d0f78b26c3a755246493eb9a83f6cd4dc3a56e3e3d80435fc3d02834bae079",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public Google web-client API key from the verified BgUtils 4.0.3 MIT package."
+  },
+  "TokenProvider/upstream/dist/utils/constants.d.ts": {
+    "sha256": "65f80b757a9d255bb48375303dfa48e2821eca2c95ecea72fc26c7aa5c290bd4",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public Google web-client API key from the verified BgUtils 4.0.3 MIT package."
+  },
+  "TokenProvider/upstream/dist/utils/constants.js": {
+    "sha256": "9da6c808c288d569c86a26a8cd23f8acc74c3db0218cc5ec9aa84bba320ebd2f",
+    "rules": [
+      "access token"
+    ],
+    "reason": "Public Google web-client API key from the verified BgUtils 4.0.3 MIT package."
   }
 }

@@ -24,6 +24,7 @@ struct ShortcutHandoff: Identifiable, Sendable {
 
 enum ShortcutSubmissionResult: Sendable {
     case admitted(DownloadJob)
+    case admittedBatch(DownloadBatch)
     case foreground(ShortcutHandoff)
 }
 
@@ -72,7 +73,7 @@ extension IllucetAppModel {
                 do {
                     switch try operation.result!.get() {
                     case let .foreground(handoff): presentShortcutHandoff(handoff)
-                    case .admitted: break
+                    case .admitted, .admittedBatch: break
                     }
                 } catch { alert = .error(error) }
             } else {
@@ -129,6 +130,15 @@ extension IllucetAppModel {
         guard preferences.behavior == .download else {
             return handoff(preferences.behavior == .ask ? "Choose how to download this link." : "Review the download options.")
         }
+        guard let site = MediaSite.recognize(request.url) else { throw ExtractionError.unsupportedSite }
+        if site != .youtube {
+            do {
+                let batch = try await submitShortcutBatch([request.url], id: request.id, preferences: preferences)
+                try? SharedLinkInbox.live().remove(request.id)
+                return .admittedBatch(batch)
+            } catch is CancellationError { throw CancellationError() }
+            catch { return handoff(error.localizedDescription) }
+        }
         guard case .video = try YouTubeURLIntentClassifier.classify(request.url) else {
             return handoff("Choose the videos to download from this collection.")
         }
@@ -141,14 +151,15 @@ extension IllucetAppModel {
         } else {
             preset = QuickStartPreset(name: "Download defaults", systemImage: "arrow.down", configuration: settings.configuration())
         }
-        let accountID = preset.configuration.accountID ?? selectedAccountID
+        let accountID = preset.configuration.accountID ?? preferredAccountID(for: .youtube)
+        let enginePreferences = settings.extractionPreferences(for: .youtube)
         let metadata: MediaMetadata
         let version: String?
         if fixtureMode {
             metadata = DeveloperFixtures.media
             version = nil
         } else {
-            let extractor = try await runtime.extractor(accountID: accountID)
+            let extractor = try await runtime.extractor(accountID: accountID, preferences: enginePreferences)
             metadata = try await extractor.analyze(url: request.url)
             version = try? await extractor.versions().ytDLP
         }
@@ -157,6 +168,7 @@ extension IllucetAppModel {
         do { config = try preset.resolvedConfiguration(metadata: metadata) }
         catch { return handoff(error.localizedDescription, PreparedShortcutDownload(metadata: metadata, configuration: settings.configuration(), version: version)) }
         config.accountID = accountID
+        config.enginePreferences = enginePreferences
         // The same discovery and launch policy used by the picker. Automatic
         // rules need no UI; only unresolved Ask rules require foreground review.
         if config.effectiveSponsorBlock.isEnabled {
@@ -187,6 +199,76 @@ extension IllucetAppModel {
         try Task.checkCancellation()
         let job = try await enqueueShortcut(metadata: metadata, configuration: config, version: version, request: request)
         return .admitted(try await waitForShortcutAdmission(job))
+    }
+
+    func submitShortcutBatch(_ urls: [URL], id: UUID, preferences: ShortcutPreferences) async throws -> DownloadBatch {
+        try await waitForShortcutStartup()
+        if let current = await batchController.currentBatches().first(where: { $0.id == id && $0.admissionPaused != true }) {
+            return current
+        }
+        guard !presentsOnboarding else { throw IllucetError.internalFailure("Finish setting up Illucet before downloading shared links.") }
+        let preset: QuickStartPreset?
+        if let presetID = preferences.preferredPresetID {
+            guard let saved = quickStartPresets.first(where: { $0.id == presetID }) else {
+                throw IllucetError.internalFailure("Your selected Shortcut preset is unavailable. Choose download options.")
+            }
+            preset = saved
+        } else { preset = nil }
+        let base = preset?.configuration ?? settings.configuration()
+        if [.photos, .filesAndPhotos].contains(base.destination),
+           PHPhotoLibrary.authorizationStatus(for: .addOnly) != .authorized {
+            throw IllucetError.internalFailure("Allow Photos access in Illucet before starting this batch.")
+        }
+        if [.filesFolder, .filesAndPhotos].contains(base.destination) {
+            guard let bookmark = snapshot.filesFolderBookmark,
+                  (try? await exporter.testFolderAccessDetail(bookmark: bookmark)) != nil else {
+                throw IllucetError.internalFailure("Choose a Files folder in Illucet before starting this batch.")
+            }
+        }
+        var items: [BulkMediaItem] = []
+        var identities = Set<String>()
+        for url in urls {
+            try Task.checkCancellation()
+            guard let site = MediaSite.recognize(url) else { throw ExtractionError.unsupportedSite }
+            let accountID = preferredAccountID(for: site)
+            let engine = settings.extractionPreferences(for: site)
+            let assets: [MediaMetadata]
+            if site == .youtube {
+                guard case .video = try YouTubeURLIntentClassifier.classify(url) else {
+                    throw IllucetError.internalFailure("Choose which videos to download from the shared playlist.")
+                }
+                assets = if fixtureMode { [DeveloperFixtures.media] }
+                    else { [try await runtime.extractor(accountID: accountID, preferences: engine).analyze(url: url)] }
+            } else if fixtureMode {
+                assets = DeveloperFixtures.externalAssets.filter { $0.sourceIdentity?.site == site }
+            } else {
+                assets = try await runtime.externalPost(url: url, accountID: accountID, preferences: engine).assets
+            }
+            for media in assets {
+                let identity = media.sourceIdentity?.archiveID ?? "youtube:\(media.videoID)"
+                guard identities.insert(identity).inserted else { continue }
+                guard items.count < 500 else { throw BulkImportError.tooManyLinks }
+                var configuration = configurationForImportedMedia(media, preferences: engine)
+                if var preset, media.sourceIdentity?.kind != .image {
+                    preset.configuration.sourceIdentity = media.sourceIdentity
+                    preset.configuration.assetFingerprint = media.assetFingerprint
+                    if site != .youtube {
+                        preset.configuration.sponsorBlock = .disabled
+                        preset.configuration.subtitleSelections = nil
+                        preset.configuration.subtitleDelivery = .none
+                        preset.configuration.thumbnailBehavior = .none
+                    }
+                    configuration = try preset.resolvedConfiguration(metadata: media)
+                }
+                configuration.enginePreferences = engine
+                configuration.accountID = accountID
+                try OutputCapabilityMatrix.validate(configuration, metadata: media)
+                items.append(.init(id: identity, metadata: media, configuration: configuration))
+            }
+        }
+        guard !items.isEmpty else { throw IllucetError.internalFailure("No supported media was found in the shared links.") }
+        await coordinator.configure(settings: settings, folderBookmark: snapshot.filesFolderBookmark)
+        return try await enqueueImportedBatch(items, baseConfiguration: base, title: "Shared media", admissionID: id, skipArchived: false)
     }
 
     /// Options and automatic submissions use the same durable request identity.
@@ -257,7 +339,7 @@ extension IllucetAppModel {
     }
 
     var canPresentShortcutOptions: Bool {
-        !isAnalyzing && !presentsOnboarding && !presentsMetadata && !presentsConfiguration
+        !isAnalyzing && !presentsBulkImport && !presentsOnboarding && !presentsMetadata && !presentsConfiguration
             && !presentsConfirmation && !presentsQuickStartConfirmation && !presentsPlaylistBatch
             && !presentsDownloadArchive && !presentsSharedLinkChoice
             && selectedJob == nil && selectedHistoryRecord == nil

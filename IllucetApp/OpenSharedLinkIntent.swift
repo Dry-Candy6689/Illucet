@@ -5,7 +5,7 @@ import Foundation
 /// the SwiftUI model has completed restoring saved state.
 struct OpenSharedLinkIntent: AppIntent {
     static let title: LocalizedStringResource = "Open shared link"
-    static let description = IntentDescription("Open a YouTube link in Illucet using your sharing preferences.")
+    static let description = IntentDescription("Open a media link in Illucet using your sharing preferences.")
     static let openAppWhenRun: Bool = true
 
     @Parameter(title: "Link") var link: URL
@@ -22,8 +22,13 @@ struct OpenSharedLinkIntent: AppIntent {
 }
 
 enum SharedLinkIntentError: Error, LocalizedError {
-    case unsupported
-    var errorDescription: String? { "Choose a supported YouTube video, playlist, or creator link." }
+    case unsupported, missingInput
+    var errorDescription: String? {
+        switch self {
+        case .unsupported: "Choose a supported media link."
+        case .missingInput: "The shortcut did not provide any links. Get the current Illucet shortcut in Settings → Sharing & Shortcuts."
+        }
+    }
 }
 
 extension Notification.Name {

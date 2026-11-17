@@ -7,15 +7,17 @@
 
 An on-device media downloader for iPhone and iPad.
 
-Paste a YouTube link, choose a preset, and save to Illucet, Files or Photos.
+Paste a media link or import a list of links, choose download options, and save to Illucet, Files or Photos.
 
 - Video, audio, playlists, subtitles and thumbnails
 - Trimming, chapters, conversion and SponsorBlock
 - Download queues, history and background transfers
 - Share Sheet Shortcuts, custom presets, themes and app icons
+- Text/rich-text bulk imports, mixed-site batches and original post images
+- Site-scoped accounts, per-site defaults and selectable download engines
 - Optional onboarding and hints from PiP, the chinchilla guide
 
-Downloads and processing run on your device using yt-dlp, QuickJS and FFmpeg.
+Downloads and processing run on your device using native transfers, optional aria2, yt-dlp, QuickJS and FFmpeg.
 No Illucet account or server is required. Background completion depends on iOS execution limits.
 On iOS 26, Shortcut preparation has a shorter time limit and may require reopening Illucet
 to continue a saved link; iOS 27 can request more execution time.

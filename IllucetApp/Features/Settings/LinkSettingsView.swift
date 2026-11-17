@@ -32,6 +32,11 @@ struct LinkSettingsView: View {
                 Picker("Action", selection: preferences.behavior) {
                     ForEach(ShortcutBehavior.allCases) { Text($0.rawValue).tag($0) }
                 }.accessibilityIdentifier("shortcuts.action")
+                Picker("When the app is needed", selection: Binding(get: { preferences.wrappedValue.foregroundPolicy ?? .whenNeeded }, set: {
+                    preferences.wrappedValue.foregroundPolicy = $0
+                })) {
+                    ForEach(ShortcutForegroundPolicy.allCases) { Text($0.rawValue).tag($0) }
+                }.accessibilityIdentifier("shortcuts.foreground")
                 Picker("Download settings", selection: preferences.preferredPresetID) {
                     Text("Current download defaults").tag(UUID?.none)
                     ForEach(model.quickStartPresets) { Text($0.name).tag(Optional($0.id)) }
@@ -55,7 +60,7 @@ struct LinkSettingsView: View {
         }
         .onDisappear { model.highlightsDownloadScreens = false }
         .settingsFormBackground()
-        .navigationTitle("Shortcuts")
+        .navigationTitle("Sharing & Shortcuts")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -67,8 +72,8 @@ struct LinkSettingsView: View {
         .sheet(isPresented: $showsHelp) {
             NavigationStack {
                 List {
-                    brandedText("Get Illucet shortcut opens Add Shortcut in Shortcuts. Choose Download with Illucet when sharing a YouTube link. If missing, enable Show in Share Sheet in the shortcut’s Details.")
-                    brandedText("Download immediately starts without opening Illucet. iOS may require you to reopen the app to finish processing; progress is kept.")
+                    brandedText("Install the shortcut once, then choose Download with Illucet when sharing supported links. If missing, enable Show in Share Sheet in the shortcut’s Details.")
+                    brandedText("Immediate downloads start in the background when iOS allows. Choose whether Illucet can open when it needs your input, or keep the links saved for later.")
                     brandedText("The download-screen switches also apply to downloads started inside Illucet. Home presets keep their own confirmation choices.")
                 }
                 .navigationTitle("About Shortcuts")
@@ -107,7 +112,7 @@ struct ClipboardSettingsView: View {
             } header: {
                 Text("When Illucet opens or returns")
             } footer: {
-                Text("Replacement applies your chosen action when the Download field already has a different YouTube link.")
+                Text("Replacement applies your chosen action when the Download field already has a different link.")
             }
             Section("iOS paste permission") { PasteSettingsButton() }
         }
@@ -121,7 +126,7 @@ struct ClipboardSettingsView: View {
             }
             Button("Keep off", role: .cancel) { }
         } message: {
-            brandedText("Illucet checks for copied YouTube links when you open or return to the app. You choose how it handles new links.")
+            brandedText("Illucet checks for supported links when you open or return to the app. You choose how it handles new links.")
         }
     }
 

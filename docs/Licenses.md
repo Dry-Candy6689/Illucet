@@ -9,11 +9,34 @@ Illucet's original code is licensed under [GPL-3.0](../LICENSE), copyright 2026 
 | yt-dlp EJS | 0.8.0 | Unlicense AND MIT AND ISC | Metadata covers EJS plus its bundled JavaScript dependencies. |
 | QuickJS-ng | 0.18.0 | MIT | Copyright/permission notice is present in the pinned amalgamation header. |
 | FFmpeg | 9.0.2 | LGPL 2.1-or-later for this configuration | `--enable-gpl`, `--enable-nonfree`, and GPL external codecs are not enabled. |
-| LAME | 4.0 | LGPL 2.0 | Linked statically for MP3 encoding; acknowledgment and LGPL obligations apply. |
+| LAME | 4.0 | LGPL-2.0-or-later | Linked statically for MP3 encoding. Keep acknowledgment and relinking materials. |
 | certifi CA bundle | 2026.10.23 | Mozilla Public License 2.0 | The bundled certificate data carries the pinned wheel notice. |
+| aria2 | 1.37.0 | GPL-2.0-or-later, used under GPL-3.0 in this combination | HTTP/HTTPS-only static library; pinned source and build scripts included. |
+| Instaloader | 4.16 | MIT | Instagram post extraction. The separately bundled packages retain the wheel hash and notices. |
+| BgUtils | 4.0.3 | MIT | Local YouTube proof tokens. Exact source, package and bundle pins are in `Config/TokenProvider.json`. |
+| Requests | 2.34.2 | Apache-2.0 | Pure-Python image extraction networking. |
+| urllib3 / idna / charset-normalizer | 2.8.0 / 3.20 / 3.5.2 | MIT / BSD-3-Clause / MIT | Exact universal-wheel pins are in `Config/ImageDependencies.json`; license texts accompany the wheels. |
 
-CPython's iOS support build also contains OpenSSL 3.5.9, bzip2 1.0.8,
-libffi 3.4.7, mpdecimal 4.0.0, XZ 5.6.4, and zstd 1.5.7. Their exact upstream
+Site glyphs are from [Simple Icons](https://github.com/simple-icons/simple-icons),
+distributed under [CC0](https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md).
+They identify the source website; no endorsement is implied.
+
+CPython's iOS support build also contains the following libraries. Build tools and
+unused GPL command-line programs in source archives are not bundled app libraries.
+
+| Library | Version | Applicable library license |
+| --- | --- | --- |
+| OpenSSL | 3.5.9 | Apache-2.0 |
+| bzip2 | 1.0.8 | bzip2 license (BSD-style) |
+| libffi | 3.4.7 | MIT |
+| mpdecimal | 4.0.0 | BSD-2-Clause |
+| liblzma (XZ) | 5.6.4 | 0BSD |
+| zstd | 1.5.7 | BSD-3-Clause option of BSD/GPL dual license |
+| Expat in CPython | 2.9.0 | MIT |
+| HACL* in CPython | `8ba599b2f6c9701b3dc961db895b0856a2210f76` | MIT |
+| CPython Apple source-dependency recipes | Pinned commits | MIT with build-source notices retained |
+
+Their exact upstream
 archives and hashes are recorded in `Vendor/PythonSourceDeps.sha256`.
 The release notices include the complete texts from those verified build inputs.
 
@@ -56,6 +79,23 @@ Pinned source/download hashes and URLs live in `Config/Dependencies.sh`.
 `Scripts/fetch-stage0-dependencies.sh` verifies them. Generated frameworks are
 intentionally ignored; a clean build must recreate them from those sources and
 the tracked scripts.
+
+## License boundaries
+
+The application uses GPL-3.0. aria2 permits version 2 or later, so the combined application uses version 3; it does not have the GPL-2.0-only gallery-dl restriction. Third-party code, notices, artwork and library
+sources retain their own licenses.
+The former in-process GPL-2.0-only gallery-dl package is excluded from the runtime
+because its license is incompatible with this GPL-3.0 combination. Image adapters
+are application code or use the MIT-licensed Instaloader package.
+
+An MIT release of original application files would require verified ownership or
+permission from their copyright holders. The initial Git snapshot and author count
+alone do not establish that permission. SponsorBlock descriptions and other copied
+third-party material retain their existing terms. Previously distributed GPL copies
+keep their existing permissions.
+
+Release checks cover the actual nested runtime distribution metadata as well as
+privacy. They are technical checks, not a determination of legal clearance.
 
 Complete distribution notices are in [ThirdPartyNotices.txt](ThirdPartyNotices.txt), also included in the app and release. Native source archives and the source tag accompany each public app release.
 

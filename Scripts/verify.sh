@@ -25,7 +25,9 @@ static() {
     python3 "$ROOT/Scripts/sync-dependency-versions.py" --check
     python3 "$ROOT/Scripts/verify-python-package-bundle.py" \
         --config "$ROOT/Config/Dependencies.sh" "$ROOT/Vendor/PythonPackages"
-    PYTHONPATH="$ROOT/PythonApp:$ROOT/Vendor/PythonPackages" \
+    python3 "$ROOT/Scripts/image-dependencies.py"
+    python3 "$ROOT/Scripts/verify-runtime-licenses.py"
+    PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$ROOT/PythonApp:$ROOT/Vendor/PythonPackages" \
         python3 -m unittest discover -s "$ROOT/PythonApp/tests" -p 'test_*.py'
 }
 

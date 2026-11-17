@@ -5,6 +5,116 @@ import Testing
 
 @Suite("Part 3 coordinator integration", .serialized)
 struct DownloadCoordinatorTests {
+    @Test("Authorized download uses a local proof token",
+          .enabled(if: ProcessInfo.processInfo.environment["ILLUCET_LOCAL_TOKEN_DOWNLOAD_LIVE"] == "1"))
+    func authorizedLocalProofTokenDownload() async throws {
+        let authorization = try AuthorizedLiveTestConfigurationLoader.load()
+        let harness = try PDR1LiveCoordinatorHarness()
+        defer { harness.finish() }
+        var engine = EnginePreferences()
+        engine.youtubeClient = "mweb"
+        engine.poTokens = .automatic
+        let metadata = try await harness.analyze(authorization.standardVideoURL, preferences: engine)
+        guard (metadata.durationSeconds ?? 0) <= 300 else { throw CoordinatorTestFailure.timeout }
+        var configuration = DownloadConfiguration.standard
+        configuration.enginePreferences = engine
+        configuration.destination = .appDocuments
+        configuration.sponsorBlock = .disabled
+        configuration.thumbnailBehavior = .none
+        configuration.maximumResolution = 480
+        configuration = OutputCapabilityMatrix.normalized(configuration)
+        FormatSelection.applyAutomaticSelection(to: &configuration, metadata: metadata)
+        let job = try await harness.enqueue(metadata: metadata, configuration: configuration)
+        let terminal = try await harness.waitForTerminalJob(job.id, boundedSample: true)
+        #expect(terminal.state == .completed, "\(terminal.errorCode ?? "no error")")
+        let proofEvents = await harness.proofTokenEvents
+        #expect(proofEvents > 0, "The service must request and receive a local token for this proof.")
+        #expect(harness.proofTransport.count > 0, "An accepted media request must carry a proof token.")
+        if terminal.state == .completed {
+            let probe = try #require(terminal.outputProbe)
+            #expect(probe.videoStreamCount > 0 && probe.audioStreamCount > 0)
+        }
+        print("ILLUCET_PO_DOWNLOAD state=\(terminal.state.rawValue) used=\(proofEvents) accepted_requests=\(harness.proofTransport.count) code=\(terminal.errorCode ?? "none")")
+        await harness.shutdown()
+    }
+
+    @Test("Authorized multi-site production downloads", .enabled(if: ProcessInfo.processInfo.environment["ILLUCET_MULTISITE_LIVE"] == "1"))
+    func authorizedMultiSiteDownloadSmoke() async throws {
+        struct Sample: Decodable { let site: MediaSite; let url: URL; let engine: DownloadEngineChoice; let kind: SourceMediaKind?; let minimumAssets: Int?; let downloadAllAssets: Bool? }
+        let path = try #require(ProcessInfo.processInfo.environment["ILLUCET_MULTISITE_LIVE_CONFIG_PATH"])
+        let samples = try JSONDecoder().decode([Sample].self, from: Data(contentsOf: URL(fileURLWithPath:path)))
+        #expect(!samples.isEmpty && samples.count <= 24)
+        let harness = try PDR1LiveCoordinatorHarness()
+        defer { harness.finish() }
+        do {
+            for sample in samples {
+                do {
+                    print("ILLUCET_MULTISITE_BEGIN site=\(sample.site.rawValue) kind=\(sample.kind?.rawValue ?? "any") engine=\(sample.engine.rawValue)")
+                    let post = try await harness.analyzeExternal(sample.url)
+                    #expect(post.assets.count >= (sample.minimumAssets ?? 1))
+                    let matching = post.assets.filter { sample.kind == nil || $0.sourceIdentity?.kind == sample.kind }
+                    guard !matching.isEmpty else {
+                        throw ExtractionError.extractorFailure(code:"requested_asset_unavailable",message:"The sample did not provide the requested media kind.",retryable:false)
+                    }
+                    let selected = sample.downloadAllAssets == true ? matching : Array(matching.prefix(1))
+                    try #require(selected.count <= 24, "Live sample exceeds the bounded gallery limit.")
+                    for metadata in selected {
+                        #expect(metadata.sourceIdentity?.site == sample.site)
+                        print("ILLUCET_MULTISITE_METADATA site=\(sample.site.rawValue) assets=\(post.assets.count) duration=\(metadata.durationSeconds ?? 0) formats=\(metadata.formats.count)")
+                        guard (metadata.durationSeconds ?? 0) <= 300 else { throw CoordinatorTestFailure.timeout }
+                        var configuration = DownloadConfiguration.standard
+                        configuration.sourceIdentity = metadata.sourceIdentity
+                        configuration.assetFingerprint = metadata.assetFingerprint
+                        configuration.enginePreferences = .init(download:sample.engine)
+                        configuration.sponsorBlock = .disabled
+                        configuration.thumbnailBehavior = .none
+                        configuration.subtitleDelivery = .none
+                        configuration.destination = .appDocuments
+                        let qualityTiers = FormatSelection.availableResolutions(in: metadata)
+                        configuration.maximumResolution = qualityTiers.filter { $0 <= 360 }.max() ?? qualityTiers.min()
+                        configuration.preserveSourceResolution = false
+                        configuration.filenameTemplate = "Multi-site-\(sample.site.rawValue)-\(sample.engine.rawValue)"
+                        let availability = SourceModeAvailability(analyzedMetadata: metadata)
+                        configuration.mode = [DownloadMode.videoAndAudio, .videoOnly, .audioOnly]
+                            .first { availability.status(for: $0).permitsSelection } ?? .videoAndAudio
+                        configuration = OutputCapabilityMatrix.normalized(configuration)
+                        FormatSelection.applyAutomaticSelection(to:&configuration,metadata:metadata)
+                        if configuration.selectedFormatIDs.isEmpty && configuration.maximumResolution != nil {
+                            configuration.maximumResolution = nil
+                            configuration.preserveSourceResolution = true
+                            FormatSelection.applyAutomaticSelection(to: &configuration, metadata: metadata)
+                        }
+                        let job = try await harness.enqueue(metadata:metadata,configuration:configuration)
+                        let terminal = try await harness.waitForTerminalJob(job.id, boundedSample: true)
+                        #expect(terminal.state == .completed, "\(sample.site.name): \(terminal.errorCode ?? "no error code")")
+                        if terminal.state == .completed {
+                            let file = try #require(terminal.outputURL)
+                            let values = try file.resourceValues(forKeys:[.isRegularFileKey,.isSymbolicLinkKey,.fileSizeKey])
+                            #expect(values.isRegularFile == true && values.isSymbolicLink != true && (values.fileSize ?? 0)>0)
+                            if metadata.sourceIdentity?.kind == .image {
+                                #expect(terminal.selectedFormatIDs == [DownloadConfiguration.originalImageFormatID])
+                                _ = try NativeImageProcessor.verify(file)
+                            }
+                            else { let probe = try #require(terminal.outputProbe); #expect(probe.videoStreamCount + probe.audioStreamCount > 0) }
+                        }
+                        print("ILLUCET_MULTISITE site=\(sample.site.rawValue) kind=\(metadata.sourceIdentity?.kind.rawValue ?? "unknown") engine=\(sample.engine.rawValue) state=\(terminal.state.rawValue) code=\(terminal.errorCode ?? "none")")
+                        if terminal.state != .completed {
+                            print("ILLUCET_MULTISITE_ERROR \(terminal.errorMessage ?? "No error detail")")
+                        }
+                    }
+                } catch {
+                    let code: String
+                    if case let ExtractionError.extractorFailure(value,_,_) = error { code = value }
+                    else if let compatibility = error as? OutputCompatibilityError { code = compatibility.localizedDescription }
+                    else { code = String(describing:type(of:error)) }
+                    print("ILLUCET_MULTISITE site=\(sample.site.rawValue) engine=\(sample.engine.rawValue) state=failed code=\(code)")
+                    Issue.record("\(sample.site.name) \(sample.engine.label): \(code)")
+                }
+            }
+        }
+        await harness.shutdown()
+    }
+
     @Test(
         "PD-R1 authorized live downloader smoke",
         .enabled(if: PDR1LiveTestGate.isEnabled),
@@ -2124,6 +2234,76 @@ struct DownloadCoordinatorTests {
         )
     }
 
+    @Test func aria2RestartsAfterWiFiPolicyDeferralWithoutBecomingCancelled() async throws {
+        let aria2 = CoordinatorAria2Transfer()
+        let harness = try CoordinatorHarness(network: .fixtureWiFi,
+            extractor: CoordinatorScriptedExtractor(results: [.success(DeveloperFixtures.media), .success(DeveloperFixtures.media)]),
+            aria2Downloader: aria2)
+        defer { harness.finish() }
+        var settings = AppSettings.defaults
+        settings.wifiOnly = true
+        await harness.configure(settings)
+        var configuration = Self.configuration
+        configuration.enginePreferences = .init(download: .aria2)
+        let job = try await harness.enqueue(configuration: configuration)
+        try await waitUntil { await aria2.starts == 1 }
+        harness.network.send(.fixtureCellular)
+        try await waitUntil { await harness.coordinator.currentJob(job.id)?.state == .waitingForWiFi }
+        #expect(await aria2.cancellations == 1)
+        #expect(await harness.coordinator.currentJob(job.id)?.errorCode != "user_cancelled")
+        harness.network.send(.fixtureWiFi)
+        try await waitUntil { await aria2.starts == 2 }
+        await harness.coordinator.cancel(job.id)
+    }
+
+    @Test func aria2CancellationRetainsItsTransferSlotUntilAcknowledgement() async throws {
+        let aria2 = CoordinatorAria2Transfer(holdCancellation: true)
+        let harness = try CoordinatorHarness(network: .fixtureWiFi,
+            extractor: CoordinatorScriptedExtractor(results: [.success(DeveloperFixtures.media), .success(DeveloperFixtures.media)]),
+            aria2Downloader: aria2, transferPermits: AsyncPermitPool(limit: 1))
+        defer { harness.finish() }
+        defer { Task { await aria2.releaseCancellation() } }
+        var settings = AppSettings.defaults
+        settings.maximumSimultaneousDownloads = 1
+        await harness.configure(settings)
+        var configuration = Self.configuration
+        configuration.enginePreferences = .init(download: .aria2)
+        _ = try await harness.enqueue(configuration: configuration)
+        _ = try await harness.enqueue(configuration: configuration)
+        try await waitUntil { await aria2.starts == 1 }
+        let activeID = try #require(await aria2.activeJobID)
+        let cancellation = Task { await harness.coordinator.cancel(activeID) }
+        try await waitUntil { await aria2.cancellationEntered }
+        #expect(await aria2.starts == 1)
+        await aria2.releaseCancellation()
+        await cancellation.value
+        try await waitUntil { await aria2.starts == 2 }
+        for job in await harness.coordinator.currentJobs() { await harness.coordinator.cancel(job.id) }
+    }
+
+    @Test func aria2DefersWhenWiFiOnlyIsEnabledDuringCellularTransfer() async throws {
+        let aria2 = CoordinatorAria2Transfer()
+        let harness = try CoordinatorHarness(network: .fixtureCellular,
+            extractor: CoordinatorScriptedExtractor(results: [.success(DeveloperFixtures.media), .success(DeveloperFixtures.media)]),
+            aria2Downloader: aria2)
+        defer { harness.finish() }
+        var settings = AppSettings.defaults
+        settings.askBeforeCellular = false
+        await harness.configure(settings)
+        var configuration = Self.configuration
+        configuration.enginePreferences = .init(download: .aria2)
+        let job = try await harness.enqueue(configuration: configuration)
+        try await waitUntil { await aria2.starts == 1 }
+        settings.wifiOnly = true
+        await harness.configure(settings)
+        try await waitUntil { await harness.coordinator.currentJob(job.id)?.state == .waitingForWiFi }
+        #expect(await aria2.cancellations == 1)
+        settings.wifiOnly = false
+        await harness.configure(settings)
+        try await waitUntil { await aria2.starts == 2 }
+        await harness.coordinator.cancel(job.id)
+    }
+
     @Test
     func cellularAlwaysAllowStartsAndPublishesGlobalPreference()
         async throws
@@ -3069,6 +3249,24 @@ struct DownloadCoordinatorTests {
         #expect(harness.recorder.history(queued.id).count == 1)
     }
 
+    @Test func redditBrowserWaitsForForegroundAndResumesTheSameJob() async throws {
+        let extractor = CoordinatorRedditForegroundExtractor()
+        let harness = try CoordinatorHarness(network: .fixtureWiFi, extractor: extractor)
+        defer { harness.finish() }
+        await harness.configure()
+        let job = try await harness.enqueue()
+        try await waitUntil { await harness.coordinator.currentJob(job.id)?.state == .needsAttention }
+        let pending = try #require(await harness.coordinator.currentJob(job.id))
+        #expect(pending.foregroundResumeReason == .websiteAccess)
+        #expect(pending.errorCode == "reddit_browser_foreground")
+        #expect(harness.recorder.history(job.id).isEmpty)
+        await harness.coordinator.resumeForegroundJobs()
+        await harness.coordinator.resumeForegroundJobs()
+        try await waitUntil { await harness.coordinator.currentJob(job.id)?.state == .completed }
+        #expect(await extractor.calls == 2)
+        #expect(await harness.coordinator.currentJob(job.id)?.foregroundResumeReason == nil)
+    }
+
     @Test
     func foregroundDuringOldAttemptFinishWaitsForTeardownThenResumesOnce() async throws {
         let background = CoordinatorBackgroundContinuation()
@@ -3657,12 +3855,20 @@ enum PDR1LiveSmokeMode: String, CaseIterable, Sendable {
     }
 }
 
+private final class ProofTransferEvidence: @unchecked Sendable {
+    private let lock = NSLock()
+    private var accepted = 0
+    var count: Int { lock.withLock { accepted } }
+    func record() { lock.withLock { accepted += 1 } }
+}
+
 private final class PDR1LiveCoordinatorHarness: @unchecked Sendable {
     private let rootURL: URL
     private let runtime = RuntimeEnvironment()
     private let coordinator: DownloadCoordinator
     private let recorder: CoordinatorEventRecorder
     private let startupTask: Task<Void, Never>
+    let proofTransport = ProofTransferEvidence()
 
     init(processingContinuation: (any ContinuedProcessingControlling)? = nil) throws {
         rootURL = FileManager.default.temporaryDirectory.appending(
@@ -3684,9 +3890,22 @@ private final class PDR1LiveCoordinatorHarness: @unchecked Sendable {
             )
         )
         let benchmark = ProcessInfo.processInfo.environment["ILLUCET_DOWNLOAD_BENCHMARK"] == "1"
+        let provingToken = ProcessInfo.processInfo.environment["ILLUCET_LOCAL_TOKEN_DOWNLOAD_LIVE"] == "1"
         let downloader = StreamDownloadService(
             sessionIdentifier: "com.local.illucet.pd-r1.\(UUID().uuidString)",
-            hooks: benchmark ? StreamDownloadServiceHooks(beforeWaiterRegistration: nil, didFinishCollecting: { metrics in
+            hooks: (benchmark || provingToken) ? StreamDownloadServiceHooks(beforeWaiterRegistration: nil, didFinishCollecting: { [proofTransport] metrics in
+                if provingToken {
+                    for transaction in metrics.transactionMetrics {
+                        guard let url = transaction.request.url, url.host?.hasSuffix(".googlevideo.com") == true,
+                              let status = (transaction.response as? HTTPURLResponse)?.statusCode,
+                              (200...299).contains(status), transaction.countOfResponseBodyBytesReceived > 0 else { continue }
+                        let hasProof = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.contains {
+                            $0.name == "pot" && ($0.value?.isEmpty == false)
+                        } == true
+                        if hasProof || url.path.contains("/pot/") { proofTransport.record() }
+                    }
+                }
+                guard benchmark else { return }
                 let safe: [String: Any] = [
                     "taskSeconds": metrics.taskInterval.duration,
                     "transactions": metrics.transactionMetrics.map { item -> [String: Any] in
@@ -3762,7 +3981,23 @@ private final class PDR1LiveCoordinatorHarness: @unchecked Sendable {
 
     func playlistAnalyzer() async throws -> YTDLPPlaylistAnalyzer { try await runtime.playlistAnalyzer() }
 
-    func analyze(_ URL: URL) async throws -> MediaMetadata {
+    func analyzeExternal(_ url: URL) async throws -> ExternalMediaPost {
+        await startupTask.value
+        var settings = AppSettings.defaults
+        settings.minimumFreeSpaceReserveBytes = 0
+        settings.automaticRetryCount = 0
+        settings.liveActivities = false
+        settings.notifyDownloadComplete = false
+        settings.notifyFailure = false
+        await coordinator.configure(settings: settings, folderBookmark: nil)
+        return try await runtime.externalPost(url:url,accountID:nil)
+    }
+
+    var proofTokenEvents: Int {
+        get async { await runtime.recorder.allEvents.filter { $0.kind == "proof_token_used" }.count }
+    }
+
+    func analyze(_ URL: URL, preferences: EnginePreferences? = nil) async throws -> MediaMetadata {
         await startupTask.value
         var settings = AppSettings.defaults
         settings.minimumFreeSpaceReserveBytes = 0
@@ -3775,7 +4010,7 @@ private final class PDR1LiveCoordinatorHarness: @unchecked Sendable {
         settings.automaticRetryCount = 0
         await coordinator.configure(settings: settings, folderBookmark: nil)
 
-        let extractor = try await runtime.extractor()
+        let extractor = try await runtime.extractor(preferences: preferences)
         return try await extractor.analyze(url: URL)
     }
 
@@ -3791,15 +4026,16 @@ private final class PDR1LiveCoordinatorHarness: @unchecked Sendable {
         )
     }
 
-    func waitForTerminalJob(_ jobID: UUID) async throws -> DownloadJob {
-        for _ in 0 ..< 1_200 {
+    func waitForTerminalJob(_ jobID: UUID, boundedSample: Bool = false) async throws -> DownloadJob {
+        for _ in 0 ..< (boundedSample ? 120 : 1_200) {
             if let terminal = recorder.jobs(jobID).last(where: {
-                $0.state.isTerminal
+                $0.state.isTerminal || (boundedSample && $0.state == .needsAttention)
             }) {
                 return terminal
             }
             try await Task.sleep(for: .milliseconds(500))
         }
+        if boundedSample { await coordinator.cancel(jobID) }
         throw CoordinatorTestFailure.timeout
     }
 
@@ -3859,6 +4095,35 @@ private final class PDR1LiveCoordinatorHarness: @unchecked Sendable {
     }
 }
 
+private actor CoordinatorAria2Transfer: Aria2Downloading {
+    private(set) var starts = 0
+    private(set) var cancellations = 0
+    private(set) var cancellationEntered = false
+    private var pending: [UUID: CheckedContinuation<URL, any Error>] = [:]
+    var activeJobID: UUID? { pending.keys.first }
+    private let holdCancellation: Bool
+    private var released = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    init(holdCancellation: Bool = false) { self.holdCancellation = holdCancellation }
+    func download(_ stream: ResolvedStream, jobID: UUID, destinationURL: URL, expectedBytes: Int64?,
+                  speedLimit: Int64?, progress: @escaping StreamTransferProgressHandler) async throws -> URL {
+        starts += 1
+        return try await withCheckedThrowingContinuation { pending[jobID] = $0 }
+    }
+    func cancel(jobID: UUID) async {
+        guard pending[jobID] != nil else { return }
+        cancellationEntered = true
+        cancellations += 1
+        if holdCancellation && !released { await withCheckedContinuation { waiters.append($0) } }
+        pending.removeValue(forKey: jobID)?.resume(throwing: CancellationError())
+    }
+    func releaseCancellation() {
+        released = true
+        let callbacks = waiters; waiters.removeAll()
+        for callback in callbacks { callback.resume() }
+    }
+}
+
 private final class CoordinatorHarness: @unchecked Sendable {
     let coordinator: DownloadCoordinator
     let network: CoordinatorNetworkMonitor
@@ -3871,9 +4136,10 @@ private final class CoordinatorHarness: @unchecked Sendable {
 
     init(
         network snapshot: NetworkPathSnapshot,
-        extractor: CoordinatorScriptedExtractor,
+        extractor: any ExtractorEngine,
         resolver: any StreamResolver = CoordinatorResolver(),
         downloader: any StreamDownloading = CoordinatorDownloader(),
+        aria2Downloader: any Aria2Downloading = NativeAria2Downloader.shared,
         DASHResolver: (any DASHFragmentResolving)? = nil,
         DASHDownloader: (any DASHFragmentDownloading)? = nil,
         DASHAssembler: (any DASHLocalStreamAssembling)? = nil,
@@ -3940,6 +4206,7 @@ private final class CoordinatorHarness: @unchecked Sendable {
         coordinator = DownloadCoordinator(
             runtime: runtime,
             downloader: downloader,
+            aria2Downloader: aria2Downloader,
             DASHDownloader: DASHDownloader,
             DASHAssembler: DASHAssembler,
             HLSDownloader: HLSDownloader,
@@ -4204,6 +4471,19 @@ private final class CoordinatorNetworkMonitor:
     deinit {
         continuation.finish()
     }
+}
+
+private actor CoordinatorRedditForegroundExtractor: ExtractorEngine {
+    private(set) var calls = 0
+    func versions() async throws -> ExtractorVersions {
+        .init(python: "fixture", ytDLP: "fixture", ejs: "fixture")
+    }
+    func analyze(url: URL) async throws -> MediaMetadata {
+        calls += 1
+        if calls == 1 { throw RedditPageError.needsForeground }
+        return DeveloperFixtures.media
+    }
+    nonisolated func cancel(requestID: UInt64) {}
 }
 
 private final class CoordinatorScriptedExtractor:

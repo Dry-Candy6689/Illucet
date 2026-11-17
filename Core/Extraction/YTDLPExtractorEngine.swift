@@ -54,11 +54,13 @@ final class YTDLPExtractorEngine: ExtractorEngine, @unchecked Sendable {
     private let python: PythonEngine
     private let authentication: AccountAuthentication?
     private let contract: LiveExtractorContract
+    private let preferences: EnginePreferences?
 
-    init(python: PythonEngine, contract: LiveExtractorContract = .bundled, authentication: AccountAuthentication? = nil) {
+    init(python: PythonEngine, contract: LiveExtractorContract = .bundled, authentication: AccountAuthentication? = nil, preferences: EnginePreferences? = nil) {
         self.python = python
         self.authentication = authentication
         self.contract = contract
+        self.preferences = preferences
     }
 
     func versions() async throws -> ExtractorVersions {
@@ -132,7 +134,7 @@ final class YTDLPExtractorEngine: ExtractorEngine, @unchecked Sendable {
                 requestID ?? PythonRequestIDAllocator.next()
             let response = try await python.executeAuthenticated(
                 requestID: activeRequestID,
-                requestJSON: requestJSON, authentication: authentication
+                requestJSON: requestJSON, authentication: authentication, preferences: preferences
             )
             return try Self.decodeAndValidateExtractionResponse(
                 response,

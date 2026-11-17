@@ -100,6 +100,7 @@ struct FragmentPauseBarrier {
 
 /// A lease spans download, validator checks and checkpoint publication. This is
 /// separate from individual URLSession task ownership and covers both transports.
+/// Exclusive staged-source ownership, including the in-process yt-dlp fallback.
 final class FragmentSourceLeases: @unchecked Sendable {
     static let shared = FragmentSourceLeases()
     private let lock = NSLock()

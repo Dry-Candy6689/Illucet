@@ -27,6 +27,8 @@ struct ExtractorVersions: Codable, Equatable, Sendable {
 }
 
 struct MediaMetadata: Codable, Equatable, Sendable {
+    var sourceIdentity: MediaSourceIdentity? = nil
+    var assetFingerprint: String? = nil
     let canonicalURL: URL
     let videoID: String
     let title: String
@@ -43,6 +45,8 @@ struct MediaMetadata: Codable, Equatable, Sendable {
     let formats: [MediaFormat]
 
     enum CodingKeys: String, CodingKey {
+        case sourceIdentity = "source_identity"
+        case assetFingerprint = "asset_fingerprint"
         case canonicalURL = "canonical_url"
         case videoID = "video_id"
         case title
@@ -227,6 +231,7 @@ struct JavaScriptChallengeCounts: Codable, Equatable, Sendable {
 }
 
 struct JavaScriptProviderEvidence: Codable, Equatable, Sendable {
+    var runtimeBackend: String? = nil
     let ytDLPVersion: String
     let ejsVersion: String
     let quickJSVersion: String
@@ -257,6 +262,7 @@ struct JavaScriptProviderEvidence: Codable, Equatable, Sendable {
     let formatInventorySHA256: String
 
     enum CodingKeys: String, CodingKey {
+        case runtimeBackend = "runtime_backend"
         case ytDLPVersion = "yt_dlp_version"
         case ejsVersion = "ejs_version"
         case quickJSVersion = "quickjs_version"
