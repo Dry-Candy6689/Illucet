@@ -45,7 +45,12 @@ Illucet's original code is [GPL-3.0](LICENSE). [Third-party notices](docs/Licens
 
 ## Download
 
-**[Download Illucet.ipa](https://github.com/Dry-Candy6689/Illucet/releases/latest/download/Illucet.ipa)**
+In **SideStore** or **AltStore Classic**, open **Sources → +** and paste the URL below.
 
-The IPA is unsigned. Install it using a sideloading tool and your own signing account.
-[Release notes and checksums](https://github.com/Dry-Candy6689/Illucet/releases/latest) · [Signing help](docs/Signing.md)
+```text
+https://github.com/Dry-Candy6689/Illucet/releases/latest/download/illucet-source.json
+```
+
+Find Illucet in the source and tap **Free** to install it. The source follows the latest Illucet release. Your sideloading app signs the IPA with your own Apple account.
+
+**[Download the unsigned IPA manually](https://github.com/Dry-Candy6689/Illucet/releases/latest/download/Illucet.ipa)** · [Release notes and checksums](https://github.com/Dry-Candy6689/Illucet/releases/latest) · [Signing help](docs/Signing.md)

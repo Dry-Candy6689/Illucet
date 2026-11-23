@@ -8,16 +8,23 @@ source on another machine need not produce byte-identical archives.
 from __future__ import annotations
 
 import argparse
+from datetime import date
 import hashlib
 import json
 from pathlib import Path
+import plistlib
 import re
 import subprocess
 import tempfile
+import zipfile
 
-PAYLOADS = ('Illucet.ipa', 'ThirdPartyNotices.txt', 'Illucet-native-sources.tar.gz')
+ROOT = Path(__file__).resolve().parents[1]
+IPA = 'Illucet.ipa'
+PAYLOADS = (IPA, 'ThirdPartyNotices.txt', 'Illucet-native-sources.tar.gz')
 MANIFEST = 'SHA256SUMS.txt'
-ASSETS = (*PAYLOADS, MANIFEST)
+CHECKSUM_ASSETS = (*PAYLOADS, MANIFEST)
+STORE_SOURCE = 'illucet-source.json'
+ASSETS = (*CHECKSUM_ASSETS, STORE_SOURCE)
 NOTES = ('On-device downloads for iPhone and iPad (iOS 26+). The IPA is unsigned; '
          'use your own sideloading/signing setup. Source code, native source inputs, '
          'license notices and checksums accompany this release.')
@@ -38,7 +45,7 @@ def checked_file(path: Path) -> None:
 
 
 def verify_bundle(directory: Path) -> None:
-    for name in ASSETS:
+    for name in CHECKSUM_ASSETS:
         checked_file(directory / name)
     manifest = directory / MANIFEST
     if manifest.stat().st_size > 4096:
@@ -54,6 +61,78 @@ def verify_bundle(directory: Path) -> None:
     for name, checksum in expected.items():
         if digest(directory / name) != checksum:
             raise ReleaseError(f'Checksum mismatch: {name}')
+
+
+def store_source(repo: str, release: dict, ipa: Path) -> dict:
+    tag = release['tag_name']
+    app_path = 'Payload/Illucet.app'
+    with zipfile.ZipFile(ipa) as archive:
+        names = archive.namelist()
+        extension_plist = re.compile(rf'{re.escape(app_path)}/PlugIns/[^/]+\.appex/Info\.plist')
+        plists = [f'{app_path}/Info.plist'] + sorted(name for name in names if extension_plist.fullmatch(name))
+        for name in plists:
+            bundle = name.removesuffix('/Info.plist')
+            if f'{bundle}/_CodeSignature/CodeResources' in names:
+                raise ReleaseError('The Store source must reference an unsigned app and extensions')
+        if any(name.lower().endswith(('.mobileprovision', '.provisionprofile')) for name in names):
+            raise ReleaseError('The Store source must reference an IPA without signing profiles')
+        info, *extensions = [plistlib.loads(archive.read(name)) for name in plists]
+
+    bundle_id = info['CFBundleIdentifier']
+    version = info['CFBundleShortVersionString']
+    build = info['CFBundleVersion']
+    minimum_os = info['MinimumOSVersion']
+    if bundle_id != 'com.local.illucet' or tag != f'v{version}':
+        raise ReleaseError('IPA bundle identifier or version does not match the Illucet release')
+    if any(not isinstance(value, str) or not re.fullmatch(r'[0-9]+(?:\.[0-9]+){0,2}', value)
+           for value in (build, minimum_os)):
+        raise ReleaseError('IPA build number and minimum OS must be valid versions')
+    privacy = {}
+    for target in (info, *extensions):
+        for key, description in target.items():
+            if not key.endswith('UsageDescription'):
+                continue
+            if not isinstance(description, str) or not description.strip():
+                raise ReleaseError(f'IPA has no privacy explanation for {key}')
+            if key in privacy and privacy[key] != description:
+                raise ReleaseError(f'IPA has conflicting privacy explanations for {key}')
+            privacy[key] = description
+    with (ROOT / 'Config/Illucet-Shared.entitlements').open('rb') as stream:
+        entitlements = sorted(plistlib.load(stream))
+
+    website = f'https://github.com/{repo}'
+    download = f'{website}/releases/download/{tag}/{IPA}'
+    icon = f'https://raw.githubusercontent.com/{repo}/main/Design/Brand/Illucet-Light.png'
+    return {
+        'name': 'Illucet',
+        'identifier': 'com.local.illucet.source',
+        'sourceURL': f'{website}/releases/latest/download/{STORE_SOURCE}',
+        'iconURL': icon,
+        'website': website,
+        'apps': [{
+            'name': 'Illucet',
+            'bundleIdentifier': bundle_id,
+            'developerName': repo.split('/')[0],
+            'subtitle': 'On-device media downloader',
+            'localizedDescription': ('Save video, audio and images on iPhone and iPad. '
+                                     'Import a list of links, manage a download queue and save to Files or Photos.'),
+            'iconURL': icon,
+            'category': 'utilities',
+            'downloadURL': download,
+            'versions': [{
+                'version': version,
+                'buildVersion': build,
+                # GitHub's creation date stays fixed when the draft is published or resumed.
+                'date': date.fromisoformat(release['created_at'][:10]).isoformat(),
+                'localizedDescription': release.get('body') or f'Illucet {version}',
+                'downloadURL': download,
+                'size': ipa.stat().st_size,
+                'sha256': digest(ipa),
+                'minOSVersion': minimum_os,
+            }],
+            'appPermissions': {'entitlements': entitlements, 'privacy': privacy},
+        }],
+    }
 
 
 class GitHub:
@@ -145,14 +224,28 @@ def asset_map(release: dict, tag: str) -> dict:
     return assets
 
 
-def verify_remote(api, release: dict, tag: str, directory: Path) -> None:
+def verify_remote(api, release: dict, tag: str, directory: Path, *, require_store_source=False) -> None:
     assets = asset_map(release, tag)
-    missing = set(ASSETS) - assets.keys()
+    names = ASSETS if require_store_source or STORE_SOURCE in assets else CHECKSUM_ASSETS
+    missing = set(names) - assets.keys()
     if missing:
         raise ReleaseError('Published release is incomplete: ' + ', '.join(sorted(missing)))
-    for name in ASSETS:
+    for name in names:
         api.download(assets[name], directory / name)
     verify_bundle(directory)
+    if STORE_SOURCE in names:
+        expected = store_source(api.repo, release, directory / IPA)
+        source = json.loads((directory / STORE_SOURCE).read_text())
+        app, = source['apps']
+        version, = app['versions']
+        expected_app = expected['apps'][0]
+        if (source.get('sourceURL') != expected['sourceURL']
+                or app.get('marketplaceID') is not None
+                or any(app.get(key) != expected_app[key]
+                       for key in ('bundleIdentifier', 'downloadURL', 'appPermissions'))
+                or any(version.get(key) != expected_value for key, expected_value in expected_app['versions'][0].items()
+                       if key != 'localizedDescription')):
+            raise ReleaseError('Store source does not match the uploaded IPA')
 
 
 def run(api, tag: str, expected_sha: str, directory: Path | None = None,
@@ -175,24 +268,31 @@ def run(api, tag: str, expected_sha: str, directory: Path | None = None,
     if release is None or not release['draft']:
         raise ReleaseError('Expected a draft release; retry to inspect current state')
     assets = asset_map(release, tag)
-    # Check every existing asset before making any upload, including the manifest.
     with tempfile.TemporaryDirectory(prefix='illucet-draft-check-') as tmp:
+        source = Path(tmp) / STORE_SOURCE
+        listing = store_source(api.repo, release, directory / IPA)
+        source.write_text(json.dumps(listing, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+        subprocess.run(['python3', str(ROOT / 'Scripts/verify-public-package.py'), str(source)], check=True)
+        files = {name: directory / name for name in CHECKSUM_ASSETS} | {STORE_SOURCE: source}
+        # Check every existing asset before uploading, so a retry can only fill missing files.
+        existing = Path(tmp) / 'uploaded'
+        existing.mkdir()
         for name, asset in assets.items():
-            target = Path(tmp) / name
+            target = existing / name
             api.download(asset, target)
-            if digest(target) != digest(directory / name):
+            if digest(target) != digest(files[name]):
                 raise ReleaseError(f'Draft asset conflicts with this build: {name}')
-    for name in ASSETS:
-        if name not in assets:
-            api.upload(tag, directory / name)
-    release = api.release(tag)
-    if release is None or not release['draft']:
-        raise ReleaseError('Draft changed during publication; inspect before retrying')
-    with tempfile.TemporaryDirectory(prefix='illucet-upload-check-') as tmp:
-        verify_remote(api, release, tag, Path(tmp))
-        for name in ASSETS:
-            if digest(Path(tmp) / name) != digest(directory / name):
-                raise ReleaseError(f'Uploaded asset differs from this build: {name}')
+        for name, path in files.items():
+            if name not in assets:
+                api.upload(tag, path)
+        release = api.release(tag)
+        if release is None or not release['draft']:
+            raise ReleaseError('Draft changed during publication; inspect before retrying')
+        with tempfile.TemporaryDirectory(prefix='illucet-upload-check-') as uploaded:
+            verify_remote(api, release, tag, Path(uploaded), require_store_source=True)
+            for name, path in files.items():
+                if digest(Path(uploaded) / name) != digest(path):
+                    raise ReleaseError(f'Uploaded asset differs from this build: {name}')
     check_tag(api, tag, expected_sha)
     api.publish(tag)
     return 'Published verified unsigned release.'
@@ -215,7 +315,8 @@ def main() -> int:
     try:
         print(run(GitHub(args.repo), args.tag, args.expected_sha, args.artifacts,
                   verify_only=args.verify_existing))
-    except (ReleaseError, OSError, ValueError, KeyError) as error:
+    except (ReleaseError, OSError, ValueError, KeyError, TypeError, zipfile.BadZipFile,
+            subprocess.CalledProcessError) as error:
         parser.exit(1, f'Release verification failed: {error}\n')
     return 0
 

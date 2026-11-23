@@ -3,11 +3,15 @@
 import copy
 import hashlib
 import importlib.util
+import io
+import json
 from pathlib import Path
+import plistlib
 import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 
 SPEC = importlib.util.spec_from_file_location('publisher', Path(__file__).resolve().parents[1] / 'publish-release.py')
 publisher = importlib.util.module_from_spec(SPEC)
@@ -16,14 +20,31 @@ TAG = 'v1.0.5'
 SHA = 'a' * 40
 
 
-def bundle(seed=b'original'):
+def bundle(seed=b'original', *, version=TAG[1:], profile=False):
     result = {name: seed + name.encode() for name in publisher.PAYLOADS}
+    ipa = io.BytesIO()
+    with zipfile.ZipFile(ipa, 'w') as archive:
+        archive.writestr('Payload/Illucet.app/Info.plist', plistlib.dumps({
+            'CFBundleIdentifier': 'com.local.illucet',
+            'CFBundleShortVersionString': version,
+            'CFBundleVersion': '8',
+            'MinimumOSVersion': '26.0',
+            'NSPhotoLibraryAddUsageDescription': 'Save selected media to Photos.',
+        }))
+        archive.writestr('Payload/Illucet.app/PlugIns/IllucetActivity.appex/Info.plist',
+                         plistlib.dumps({'NSMicrophoneUsageDescription': 'Test extension permission.'}))
+        archive.writestr('Payload/Illucet.app/Illucet', seed)
+        if profile:
+            archive.writestr('Payload/Illucet.app/embedded.mobileprovision', b'test profile')
+    result[publisher.IPA] = ipa.getvalue()
     result[publisher.MANIFEST] = ''.join(
         f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, data in result.items()).encode()
     return result
 
 
 class FakeGitHub:
+    repo = 'example/Illucet'
+
     def __init__(self, data=None, draft=False):
         self.exists = data is not None
         self.data = dict(data or {})
@@ -40,7 +61,8 @@ class FakeGitHub:
             raise publisher.ReleaseError(self.failure)
         if not self.exists:
             return None
-        return {'tag_name': tag, 'draft': self.draft, 'assets': [
+        return {'tag_name': tag, 'draft': self.draft, 'created_at': '2026-11-09T00:00:00Z',
+                'body': 'Added a new download option.', 'assets': [
             {'id': i, 'name': name, 'state': 'uploaded', 'size': len(data)}
             for i, (name, data) in enumerate(self.data.items())]}
 
@@ -79,7 +101,59 @@ class PublicationTests(unittest.TestCase):
         api = FakeGitHub()
         self.assertIn('Published', self.run_publish(api))
         self.assertEqual(api.mutations, ['create', *[('upload', n) for n in publisher.ASSETS], 'publish'])
-        self.assertEqual(api.data, self.data)
+        self.assertEqual({name: api.data[name] for name in self.data}, self.data)
+        source = json.loads(api.data[publisher.STORE_SOURCE])
+        app, = source['apps']
+        version, = app['versions']
+        release_root = f'https://github.com/{api.repo}/releases'
+        self.assertEqual(source['sourceURL'], f'{release_root}/latest/download/{publisher.STORE_SOURCE}')
+        self.assertEqual(app['bundleIdentifier'], 'com.local.illucet')
+        self.assertNotIn('marketplaceID', app)
+        self.assertEqual(version['downloadURL'], f'{release_root}/download/{TAG}/{publisher.IPA}')
+        self.assertEqual((version['version'], version['buildVersion'], version['minOSVersion']), ('1.0.5', '8', '26.0'))
+        self.assertEqual(version['size'], len(self.data[publisher.IPA]))
+        self.assertEqual(version['sha256'], hashlib.sha256(self.data[publisher.IPA]).hexdigest())
+        self.assertEqual(app['appPermissions']['privacy'], {
+            'NSPhotoLibraryAddUsageDescription': 'Save selected media to Photos.',
+            'NSMicrophoneUsageDescription': 'Test extension permission.',
+        })
+        self.assertIn('com.apple.security.application-groups', app['appPermissions']['entitlements'])
+
+    def test_next_release_keeps_the_feed_url_and_links_its_own_ipa(self):
+        older = FakeGitHub()
+        self.run_publish(older)
+        for name, data in bundle(version='1.1.0').items():
+            (self.directory / name).write_bytes(data)
+        newer = FakeGitHub()
+        publisher.run(newer, 'v1.1.0', SHA, self.directory)
+        old_feed = json.loads(older.data[publisher.STORE_SOURCE])
+        new_feed = json.loads(newer.data[publisher.STORE_SOURCE])
+        self.assertEqual(new_feed['sourceURL'], old_feed['sourceURL'])
+        version, = new_feed['apps'][0]['versions']
+        self.assertEqual(version['version'], '1.1.0')
+        self.assertIn('/releases/download/v1.1.0/', version['downloadURL'])
+        self.assertEqual(version['sha256'], hashlib.sha256(newer.data[publisher.IPA]).hexdigest())
+
+    def test_rejects_published_source_pointing_to_different_ipa(self):
+        api = FakeGitHub()
+        self.run_publish(api)
+        source = json.loads(api.data[publisher.STORE_SOURCE])
+        source['apps'][0]['versions'][0]['sha256'] = 'a' * 64
+        api.data[publisher.STORE_SOURCE] = json.dumps(source).encode()
+        api.mutations.clear()
+        with self.assertRaisesRegex(publisher.ReleaseError, 'source does not match'):
+            self.run_publish(api, verify_only=True)
+        self.assertEqual(api.mutations, [])
+
+    def test_wrong_version_or_signing_profile_blocks_upload(self):
+        for data, message in ((bundle(version='2.0.0'), 'version does not match'),
+                              (bundle(profile=True), 'without signing profiles')):
+            for name, content in data.items():
+                (self.directory / name).write_bytes(content)
+            api = FakeGitHub({}, draft=True)
+            with self.subTest(message=message), self.assertRaisesRegex(publisher.ReleaseError, message):
+                self.run_publish(api)
+            self.assertEqual(api.mutations, [])
 
     def test_release_creation_uses_versioned_notes_when_present(self):
         root = self.directory / 'repository'
@@ -129,7 +203,8 @@ class PublicationTests(unittest.TestCase):
         api = FakeGitHub({'Illucet.ipa': self.data['Illucet.ipa']}, draft=True)
         self.run_publish(api)
         self.assertNotIn(('upload', 'Illucet.ipa'), api.mutations)
-        self.assertEqual(api.data, self.data)
+        self.assertEqual({name: api.data[name] for name in self.data}, self.data)
+        self.assertIn(publisher.STORE_SOURCE, api.data)
         self.assertFalse(api.draft)
 
     def test_conflicting_draft_fails_before_any_upload(self):

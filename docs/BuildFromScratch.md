@@ -43,7 +43,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ILLUCET_SIMULATOR_ID=<u
 Scripts/build-unsigned-handoff.sh /private/tmp/IllucetRelease
 ```
 
-Discover simulator IDs with `xcrun simctl list devices available`. The handoff contains `Illucet.ipa`, checksums, complete notices, signing help and local build logs. Public release assets include the IPA, notices, source inputs and checksums; build logs stay local.
+Discover simulator IDs with `xcrun simctl list devices available`. The handoff contains `Illucet.ipa`, checksums, complete notices, signing help and local build logs. Public release assets include the IPA, notices, source inputs, checksums and the SideStore and AltStore Classic source.
 
 See [Development](Development.md) for UI, live-download and Release guard invocations, and [Licenses](Licenses.md) for rebuilding linked components. Native media bytes can vary by toolchain; verify actual properties and record new checksums.
 

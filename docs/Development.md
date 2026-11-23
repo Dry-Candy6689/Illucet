@@ -363,7 +363,7 @@ binary `.shortcut` file; signing requires the normal Shortcuts system service.
 ## Release publication
 
 Version tags must match the app version. The unsigned-IPA workflow builds and tests
-before staging the four release assets in a draft. It publishes only after verifying
+before staging the release assets in a draft. It publishes only after verifying
 all uploaded files. Publication is serialized per tag. Each build attempt has its own artifact; the
 publish job uses the exact artifact ID from its successful build job. A retry verifies an existing
 published release against its own checksum manifest without replacing its files;
@@ -373,6 +373,13 @@ Conflicts or incomplete published releases stop for review.
 
 Keep user-facing notes in `docs/releases/VERSION.md`. Publication uses that file
 for the matching tag, with the generic installation notes as a fallback.
+
+Publication also generates `illucet-source.json` for SideStore and AltStore Classic
+from the verified unsigned IPA and the release notes. The feed records the app
+and extension privacy declarations, version, build, minimum OS, size and SHA-256.
+The IPA link inside the feed names the exact tag. The public URL in the README
+follows GitHub's latest release, so each verified release updates the feed at the
+same URL. Keep dependency-only runtime releases out of GitHub's latest slot.
 
 For a read-only check, use `python3 Scripts/publish-release.py --repo OWNER/REPO
 --tag vVERSION --expected-sha COMMIT --verify-existing`, with the full commit SHA
